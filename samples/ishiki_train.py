@@ -73,15 +73,15 @@ def get_cfgs():
         "default_joint_angles": {  # [rad]
             'R_HIP_Y': 0.0,
             'R_HIP_R': 0.0,
-            'R_HIP_P': -0.8,
-            'R_KNEE': 1.6,
-            'R_ANKLE_P': -0.8,
+            'R_HIP_P': -0.2, # 0.8
+            'R_KNEE': 0.5, # 1.6
+            'R_ANKLE_P': -0.2,  # -0.8
             'R_ANKLE_R': 0.0,
             'L_HIP_Y': 0.0,
             'L_HIP_R': 0.0,
-            'L_HIP_P': -0.8,
-            'L_KNEE': 1.6,
-            'L_ANKLE_P': -0.8,
+            'L_HIP_P': -0.2, # 0.8
+            'L_KNEE': 0.5, # 1.6
+            'L_ANKLE_P': -0.2, # -0.8
             'L_ANKLE_R': 0.0
         },
         "joint_names": [
@@ -104,19 +104,21 @@ def get_cfgs():
         
         # ランダム化設定を追加
         "randomization": {
-            "kp_range": [1000.0, 5000.0],  # kpの範囲 (75% ~ 125%)
-            "kd_range": [300.0, 700.0],    # kdの範囲 (60% ~ 140%)
-            "base_height_range": [0.639, 0.641],  # 初期高さの範囲 (+-1mm)
+            "kp_range": [200.0, 500.0],  # kpの範囲 (75% ~ 125%)
+            "kd_range": [2.0, 6.0],    # kdの範囲 (60% ~ 140%)
+            "base_height_range": [0.869, 0.871],  # 0.639~0.641 初期高さの範囲 (+-1mm)
             "randomize_every_reset": True,  # リセット毎にランダム化するか
-            "randomize_kp_kd": True,       # kp,kdをランダム化するか
+            "randomize_kp_kd": False,       # kp,kdをランダム化するか
             "randomize_height": True,       # 初期高さをランダム化するか
         },
         
         # termination
-        "termination_if_roll_greater_than": 10,  # degree
-        "termination_if_pitch_greater_than": 10,
+        # "termination_if_roll_greater_than": 10,  # degree
+        # "termination_if_pitch_greater_than": 10,
+        "termination_if_roll_greater_than": 15,  # degree
+        "termination_if_pitch_greater_than": 5,
         # base pose
-        "base_init_pos": [0.0, 0.0, 0.64],  # 基準値（ランダム化される）
+        "base_init_pos": [0.0, 0.0, 0.87],  # 基準値 64（ランダム化される） 
         "base_init_quat": [1.0, 0.0, 0.0, 0.0],
         "episode_length_s": 20.0,
         "resampling_time_s": 4.0,
@@ -171,9 +173,9 @@ def get_cfgs():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--exp_name", type=str, default="ishiki-walking1")
+    parser.add_argument("-e", "--exp_name", type=str, default="ishiki-walking-extension")
     parser.add_argument("-B", "--num_envs", type=int, default=4096)
-    parser.add_argument("--max_iterations", type=int, default=5001) # 101
+    parser.add_argument("--max_iterations", type=int, default=1001) # 101
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--view", action='store_true')
 

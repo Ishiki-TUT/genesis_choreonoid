@@ -4,21 +4,21 @@ import math
 def rand_float(lower, upper, shape, device):
     return (upper - lower) * torch.rand(size=shape, device=device) + lower
 
-# def quat_from_euler_xyz(roll, pitch, yaw):
-#     """オイラー角(roll, pitch, yaw)からクォータニオンを生成"""
-#     cr = torch.cos(roll * 0.5)
-#     sr = torch.sin(roll * 0.5)
-#     cp = torch.cos(pitch * 0.5)
-#     sp = torch.sin(pitch * 0.5)
-#     cy = torch.cos(yaw * 0.5)
-#     sy = torch.sin(yaw * 0.5)
+def quat_from_euler_xyz(roll, pitch, yaw):
+    """オイラー角(roll, pitch, yaw)からクォータニオンを生成"""
+    cr = torch.cos(roll * 0.5)
+    sr = torch.sin(roll * 0.5)
+    cp = torch.cos(pitch * 0.5)
+    sp = torch.sin(pitch * 0.5)
+    cy = torch.cos(yaw * 0.5)
+    sy = torch.sin(yaw * 0.5)
     
-#     w = cr * cp * cy + sr * sp * sy
-#     x = sr * cp * cy - cr * sp * sy
-#     y = cr * sp * cy + sr * cp * sy
-#     z = cr * cp * sy - sr * sp * cy
+    w = cr * cp * cy + sr * sp * sy
+    x = sr * cp * cy - cr * sp * sy
+    y = cr * sp * cy + sr * cp * sy
+    z = cr * cp * sy - sr * sp * cy
     
-#     return torch.stack([w, x, y, z], dim=-1)
+    return torch.stack([w, x, y, z], dim=-1)
 
 class RLEnvBase:
     def __init__(self, num_envs, env_cfg, obs_cfg, reward_cfg, command_cfg,
@@ -276,14 +276,12 @@ class RLEnvBase:
             self.base_pos[envs_idx] = base_pos_randomized
             
             # ランダムな姿勢（既存のコード）
-            # random_roll = rand_float(-0.5, 0.5, (num_reset_envs,), self.device) * (math.pi / 180.0)
             random_roll = torch.deg2rad(rand_float(-0.5, 0.5, (num_reset_envs,), self.device))
-            # random_pitch = rand_float(-0.5, 0.5, (num_reset_envs,), self.device) * (math.pi / 180.0)
             random_pitch = torch.deg2rad(rand_float(-0.5, 0.5, (num_reset_envs,), self.device))
             zero_yaw = torch.zeros((num_reset_envs,), device=self.device, dtype=torch.float32)
             
             # ランダムなクォータニオンを計算して設定
-            random_quat = (random_roll, random_pitch, zero_yaw)
+            random_quat = quat_from_euler_xyz(random_roll, random_pitch, zero_yaw)
             self.base_quat[envs_idx] = random_quat
 
         self.base_lin_vel[envs_idx] = 0
