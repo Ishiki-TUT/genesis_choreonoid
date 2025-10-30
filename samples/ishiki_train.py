@@ -70,18 +70,32 @@ def get_cfgs():
     env_cfg = {
         "num_actions": 12,
         # joint/link names
+        # "default_joint_angles": {  # [rad]
+        #     'R_HIP_Y': 0.0,
+        #     'R_HIP_R': 0.0,
+        #     'R_HIP_P': -0.2, # -0.8
+        #     'R_KNEE': 0.5, # 1.6
+        #     'R_ANKLE_P': -0.2,  # -0.8
+        #     'R_ANKLE_R': 0.0,
+        #     'L_HIP_Y': 0.0,
+        #     'L_HIP_R': 0.0,
+        #     'L_HIP_P': -0.2, # 0.8
+        #     'L_KNEE': 0.5, # 1.6
+        #     'L_ANKLE_P': -0.2, # -0.8
+        #     'L_ANKLE_R': 0.0
+        # },
         "default_joint_angles": {  # [rad]
             'R_HIP_Y': 0.0,
             'R_HIP_R': 0.0,
-            'R_HIP_P': -0.2, # 0.8
-            'R_KNEE': 0.5, # 1.6
-            'R_ANKLE_P': -0.2,  # -0.8
+            'R_HIP_P': -0.8, # -0.8
+            'R_KNEE': 1.6, # 1.6
+            'R_ANKLE_P': -0.8,  # -0.8
             'R_ANKLE_R': 0.0,
             'L_HIP_Y': 0.0,
             'L_HIP_R': 0.0,
-            'L_HIP_P': -0.2, # 0.8
-            'L_KNEE': 0.5, # 1.6
-            'L_ANKLE_P': -0.2, # -0.8
+            'L_HIP_P': -0.8, # 0.8
+            'L_KNEE': 1.6, # 1.6
+            'L_ANKLE_P': -0.8, # -0.8
             'L_ANKLE_R': 0.0
         },
         "joint_names": [
@@ -106,19 +120,23 @@ def get_cfgs():
         "randomization": {
             "kp_range": [200.0, 500.0],  # kpの範囲 (75% ~ 125%)
             "kd_range": [2.0, 6.0],    # kdの範囲 (60% ~ 140%)
-            "base_height_range": [0.869, 0.871],  # 0.639~0.641 初期高さの範囲 (+-1mm)
+            "base_height_range": [0.639, 0.641],  # 0.639~0.641 初期高さの範囲 (+-1mm)
+            # "base_height_range": [0.869, 0.871],  # 0.639~0.641 初期高さの範囲 (+-1mm)
             "randomize_every_reset": True,  # リセット毎にランダム化するか
             "randomize_kp_kd": False,       # kp,kdをランダム化するか
-            "randomize_height": True,       # 初期高さをランダム化するか
+            "randomize_height": False,       # 初期高さをランダム化するか
         },
         
         # termination
         # "termination_if_roll_greater_than": 10,  # degree
         # "termination_if_pitch_greater_than": 10,
-        "termination_if_roll_greater_than": 15,  # degree
-        "termination_if_pitch_greater_than": 5,
+        "termination_if_roll_greater_than": 60,  # degree
+        "termination_if_pitch_greater_than": 60,
+        # "termination_if_roll_greater_than": 15,  # degree
+        # "termination_if_pitch_greater_than": 5,
         # base pose
-        "base_init_pos": [0.0, 0.0, 0.87],  # 基準値 64（ランダム化される） 
+        # "base_init_pos": [0.0, 0.0, 0.87],  # 基準値 64（ランダム化される） 
+        "base_init_pos": [0.0, 0.0, 0.64],  # 基準値 64（ランダム化される） 
         "base_init_quat": [1.0, 0.0, 0.0, 0.0],
         "episode_length_s": 20.0,
         "resampling_time_s": 4.0,
@@ -141,7 +159,7 @@ def get_cfgs():
     reward_cfg = {
         "tracking_sigma": 0.25,
         "base_height_target": 0.64,
-        # "base_height_target": 0.70,
+        # "base_height_target": 0.87,
         "feet_height_target": 0.075,
         "reward_scales": {
             # "tracking_lin_vel": 1.0,
@@ -149,7 +167,7 @@ def get_cfgs():
             "tracking_lin_vel": 2.0,
             "tracking_ang_vel": 0.4,
             "lin_vel_z": -1.0,
-            "base_height": -50.0,
+            # "base_height": -50.0,  # 高さ維持の報酬消している
             "action_rate": -0.005,
             # "action_rate": -0.05,
             "similar_to_default": -0.1,
@@ -173,9 +191,9 @@ def get_cfgs():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--exp_name", type=str, default="ishiki-walking-extension")
+    parser.add_argument("-e", "--exp_name", type=str, default="ishiki-walking-test")
     parser.add_argument("-B", "--num_envs", type=int, default=4096)
-    parser.add_argument("--max_iterations", type=int, default=1001) # 101
+    parser.add_argument("--max_iterations", type=int, default=2001) # 101
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--view", action='store_true')
 

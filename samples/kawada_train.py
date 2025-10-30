@@ -213,7 +213,7 @@ def main():
     runner = OnPolicyRunner(env, train_cfg, log_dir, device=gs.device)
     if args.resume is not None:
         runner.load(resume_path)
-    env.reset()
+    # env.reset()
     runner.learn(num_learning_iterations=args.max_iterations, init_at_random_ep_len=True)
 
 if __name__ == "__main__":
