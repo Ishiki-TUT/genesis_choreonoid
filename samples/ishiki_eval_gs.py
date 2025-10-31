@@ -21,7 +21,7 @@ import genesis as gs
 
 from kawada_env_gs import KawadaBaseEnvGenesis as RL_Env
 
-def save_simple_csv(step_data, action_data, obs_data, exp_name, ckpt):
+def save_simple_csv(step_data, obs_data, exp_name, ckpt):
     """CSVファイルにデータを保存する関数"""
     if not step_data:
         print("データがありません")
@@ -30,10 +30,10 @@ def save_simple_csv(step_data, action_data, obs_data, exp_name, ckpt):
     # 基本的な辞書形式でデータを整理
     data_dict = {'step': step_data}
     
-    # Actionデータ
-    action_array = np.array(action_data)
-    for i in range(action_array.shape[1]):
-        data_dict[f'action_{i}'] = action_array[:, i]
+    # # Actionデータ
+    # action_array = np.array(action_data)
+    # for i in range(action_array.shape[1]):
+    #     data_dict[f'action_{i}'] = action_array[:, i]
     
     # Observationデータ
     obs_array = np.array(obs_data)
@@ -93,7 +93,7 @@ def eval_policy_with_data_collection(env, policy, args):
     """データ収集付きの評価関数"""
     # データ収集用のリスト
     step_data = []
-    action_data = []
+    # action_data = []
     obs_data = []
     
     obs, _ = env.reset()
@@ -108,7 +108,7 @@ def eval_policy_with_data_collection(env, policy, args):
             
             # データを記録
             step_data.append(cnt)
-            action_data.append(actions.cpu().numpy().flatten())
+            # action_data.append(actions.cpu().numpy().flatten())
             obs_data.append(obs.cpu().numpy().flatten())
             
             # 環境をステップ実行
@@ -128,7 +128,7 @@ def eval_policy_with_data_collection(env, policy, args):
     print(f"データ収集完了: {len(step_data)} steps collected")
     
     # CSVファイルに保存
-    df = save_simple_csv(step_data, action_data, obs_data, args.exp_name, args.ckpt)
+    df = save_simple_csv(step_data, obs_data, args.exp_name, args.ckpt)
     
     return df
 

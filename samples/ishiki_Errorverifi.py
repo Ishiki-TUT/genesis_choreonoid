@@ -13,12 +13,12 @@ JOINT_NAMES = ['R_HIP_Y', 'R_HIP_R', 'R_HIP_P', 'R_KNEE', 'R_ANKLE_P', 'R_ANKLE_
                'L_HIP_Y', 'L_HIP_R', 'L_HIP_P', 'L_KNEE', 'L_ANKLE_P', 'L_ANKLE_R']
 
 COLORS = {
-    'genesis': 'blue',
-    'genesis_light': 'lightblue',
-    'genesis_dark': 'darkblue',
-    'choreonoid': 'red',
-    'choreonoid_light': 'lightcoral',
-    'choreonoid_dark': 'darkred'
+    'genesis_ang_vel': '#1f77b4',      # 青系
+    'genesis_dof_pos': '#ff7f0e',      # オレンジ系
+    'genesis_action': '#2ca02c',       # 緑系
+    'choreonoid_ang_vel': '#d62728',   # 赤系
+    'choreonoid_dof_pos': '#9467bd',   # 紫系
+    'choreonoid_action': '#8c564b',    # 茶系
 }
 
 PLOT_CONFIG = {
@@ -28,326 +28,499 @@ PLOT_CONFIG = {
     'dpi': 300,
     'alpha_line': 0.8,
     'alpha_grid': 0.3,
-    'linewidth': 2,
-    'linewidth_thick': 3
+    'linewidth': 2
 }
 
 # 結果保存用ディレクトリ作成
-os.makedirs('comparison_plots', exist_ok=True)
+os.makedirs('obs_comparison_plots', exist_ok=True)
 
 def load_data():
     """データ読み込み"""
+    print("Loading data...")
     genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
     cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_simple.csv')
+    
+    print(f"Genesis data shape: {genesis_df.shape}")
+    print(f"Choreonoid data shape: {cnoid_df.shape}")
+    
     return genesis_df, cnoid_df
 
-def calc_action_obs_diff(df):
+def extract_obs_components(genesis_df, cnoid_df):
     """
-    アクションと対応する観測値の差分を計算
+    観測値の各成分を抽出
     観測値の構造:
-    - obs_0~2: base_ang_vel (3)
-    - obs_3~5: projected_gravity (3) 
-    - obs_6~8: commands (3)
-    - obs_9~20: dof_pos - default_dof_pos (12)
-    - obs_21~32: dof_vel (12)
-    - obs_33~44: actions (12) ← これがactionに対応
+    - obs_0~2:   base_ang_vel (3) - 基準座標系での角速度
+    - obs_3~5:   projected_gravity (3) - 重力ベクトル
+    - obs_6~8:   commands (3) - コマンド値
+    - obs_9~20:  dof_pos - default_dof_pos (12) - 関節角度（デフォルトからの差分）
+    - obs_21~32: dof_vel (12) - 関節角速度
+    - obs_33~44: actions (12) - アクション値
     """
-    action_cols = [col for col in df.columns if col.startswith('action_')]
-    num_actions = len(action_cols)
-    obs_action_start_idx = 33  # obs_33からがactions
     
-    diffs = []
-    for i in range(num_actions):
-        action_col = f'action_{i}'
-        obs_col = f'obs_{obs_action_start_idx + i}'
+    # 共通のステップ数を確認
+    min_steps = min(len(genesis_df), len(cnoid_df))
+    print(f"Analyzing {min_steps} steps")
+    
+    # Base angular velocity (obs_0~2) - ベース角速度
+    genesis_ang_vel = np.array([genesis_df[f'obs_{i}'].iloc[:min_steps] for i in range(3)]).T
+    cnoid_ang_vel = np.array([cnoid_df[f'obs_{i}'].iloc[:min_steps] for i in range(3)]).T
+    
+    # Joint positions (obs_9~20) - 関節位置（12関節）
+    genesis_dof_pos = np.array([genesis_df[f'obs_{9+i}'].iloc[:min_steps] for i in range(12)]).T
+    cnoid_dof_pos = np.array([cnoid_df[f'obs_{9+i}'].iloc[:min_steps] for i in range(12)]).T
+    
+    # Joint velocities (obs_21~32) - 関節速度（12関節）
+    genesis_dof_vel = np.array([genesis_df[f'obs_{21+i}'].iloc[:min_steps] for i in range(12)]).T
+    cnoid_dof_vel = np.array([cnoid_df[f'obs_{21+i}'].iloc[:min_steps] for i in range(12)]).T
+    
+    # Actions (obs_33~44) - アクション値（12関節）
+    genesis_actions = np.array([genesis_df[f'obs_{33+i}'].iloc[:min_steps] for i in range(12)]).T
+    cnoid_actions = np.array([cnoid_df[f'obs_{33+i}'].iloc[:min_steps] for i in range(12)]).T
+    
+    return {
+        'genesis_ang_vel': genesis_ang_vel,
+        'cnoid_ang_vel': cnoid_ang_vel,
+        'genesis_dof_pos': genesis_dof_pos,
+        'cnoid_dof_pos': cnoid_dof_pos,
+        'genesis_dof_vel': genesis_dof_vel,
+        'cnoid_dof_vel': cnoid_dof_vel,
+        'genesis_actions': genesis_actions,
+        'cnoid_actions': cnoid_actions
+    }
+
+def plot_base_ang_vel_comparison(data):
+    """Base Angular Velocity比較 (obs_0~2)"""
+    genesis_ang_vel = data['genesis_ang_vel']
+    cnoid_ang_vel = data['cnoid_ang_vel']
+    
+    steps = np.arange(len(genesis_ang_vel))
+    
+    fig, axes = plt.subplots(1, 3, figsize=PLOT_CONFIG['figsize_wide'])
+    ang_vel_names = ['Roll Rate', 'Pitch Rate', 'Yaw Rate']
+    
+    for i in range(3):
+        axes[i].plot(steps, genesis_ang_vel[:, i], 
+                    label='Genesis', 
+                    color=COLORS['genesis_ang_vel'],
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'])
         
-        if action_col in df.columns and obs_col in df.columns:
-            diff = np.abs(df[action_col] - df[obs_col])
-            diffs.append(diff)
-        else:
-            print(f"Warning: {action_col} or {obs_col} not found")
+        axes[i].plot(steps, cnoid_ang_vel[:, i], 
+                    label='Choreonoid', 
+                    color=COLORS['choreonoid_ang_vel'],
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'])
+        
+        axes[i].set_title(f'{ang_vel_names[i]} (obs_{i})', fontsize=12, fontweight='bold')
+        axes[i].set_xlabel('Time Step')
+        axes[i].set_ylabel('Angular Velocity [rad/s]')
+        axes[i].legend()
+        axes[i].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
+        
+        # 統計情報を表示
+        g_mean = np.mean(genesis_ang_vel[:, i])
+        c_mean = np.mean(cnoid_ang_vel[:, i])
+        diff_mean = np.mean(np.abs(genesis_ang_vel[:, i] - cnoid_ang_vel[:, i]))
+        
+        axes[i].text(0.02, 0.98, f'G_avg: {g_mean:.4f}\nC_avg: {c_mean:.4f}\nDiff: {diff_mean:.4f}', 
+                    transform=axes[i].transAxes, 
+                    verticalalignment='top',
+                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8),
+                    fontsize=8)
     
-    return np.array(diffs).T
+    plt.suptitle('Genesis vs Choreonoid: Base Angular Velocity Comparison\n(obs_0~2)', 
+                 fontsize=16, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig('obs_comparison_plots/base_ang_vel_comparison.png', 
+                dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
+    plt.show()
+    print("✓ Base angular velocity comparison plot saved")
 
-def get_common_data():
-    """共通データを取得"""
-    genesis_df, cnoid_df = load_data()
-    genesis_diffs = calc_action_obs_diff(genesis_df)
-    cnoid_diffs = calc_action_obs_diff(cnoid_df)
-    return genesis_diffs, cnoid_diffs
-
-def plot_1_time_series():
-    """1. 時系列プロット"""
-    genesis_diffs, cnoid_diffs = get_common_data()
+def plot_dof_pos_comparison(data):
+    """Joint Position比較 (obs_9~20)"""
+    genesis_dof_pos = data['genesis_dof_pos']
+    cnoid_dof_pos = data['cnoid_dof_pos']
+    
+    steps = np.arange(len(genesis_dof_pos))
     
     fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
     axes = axes.flatten()
     
     for i in range(12):
-        axes[i].plot(genesis_diffs[:, i], label='Genesis', 
-                    alpha=PLOT_CONFIG['alpha_line'], 
-                    linewidth=PLOT_CONFIG['linewidth'], 
-                    color=COLORS['genesis'])
-        axes[i].plot(cnoid_diffs[:, i], label='Choreonoid', 
-                    alpha=PLOT_CONFIG['alpha_line'], 
-                    linewidth=PLOT_CONFIG['linewidth'], 
-                    color=COLORS['choreonoid'])
-        axes[i].set_title(f'{JOINT_NAMES[i]} Error', fontsize=12, fontweight='bold')
+        axes[i].plot(steps, genesis_dof_pos[:, i], 
+                    label='Genesis', 
+                    color=COLORS['genesis_dof_pos'],
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'])
+        
+        axes[i].plot(steps, cnoid_dof_pos[:, i], 
+                    label='Choreonoid', 
+                    color=COLORS['choreonoid_dof_pos'],
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'])
+        
+        axes[i].set_title(f'{JOINT_NAMES[i]} Position (obs_{9+i})', 
+                         fontsize=12, fontweight='bold')
         axes[i].set_xlabel('Time Step')
-        axes[i].set_ylabel('|Action - Obs|')
-        axes[i].legend()
+        axes[i].set_ylabel('Joint Position [rad]')
+        axes[i].legend(fontsize=8)
         axes[i].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
         
-        # Y軸の範囲を調整
-        max_val = max(np.max(genesis_diffs[:, i]), np.max(cnoid_diffs[:, i]))
-        axes[i].set_ylim(0, max_val * 1.1)
+        # 統計情報を表示
+        g_mean = np.mean(genesis_dof_pos[:, i])
+        c_mean = np.mean(cnoid_dof_pos[:, i])
+        diff_mean = np.mean(np.abs(genesis_dof_pos[:, i] - cnoid_dof_pos[:, i]))
+        
+        axes[i].text(0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nΔ: {diff_mean:.4f}', 
+                    transform=axes[i].transAxes, 
+                    verticalalignment='top',
+                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8),
+                    fontsize=8)
     
-    plt.suptitle('Action-Observation Error Time Series Comparison\n(Action vs obs_33~44)', 
+    plt.suptitle('Genesis vs Choreonoid: Joint Position Comparison\n(obs_9~20: dof_pos - default_dof_pos)', 
                  fontsize=16, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('comparison_plots/1_time_series_comparison.png', 
+    plt.savefig('obs_comparison_plots/dof_pos_comparison.png', 
                 dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
     plt.show()
-    print("1. Time series plot saved as '1_time_series_comparison.png'")
+    print("✓ Joint position comparison plot saved")
 
-def plot_2_box_plots():
-    """2. 統計サマリー比較（箱ひげ図）"""
-    genesis_diffs, cnoid_diffs = get_common_data()
+def plot_dof_vel_comparison(data):
+    """Joint Velocity比較 (obs_21~32)"""
+    genesis_dof_vel = data['genesis_dof_vel']
+    cnoid_dof_vel = data['cnoid_dof_vel']
     
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=PLOT_CONFIG['figsize_medium'])
+    steps = np.arange(len(genesis_dof_vel))
     
-    # Genesis
-    genesis_box_data = [genesis_diffs[:, i] for i in range(12)]
-    bp1 = ax1.boxplot(genesis_box_data, labels=JOINT_NAMES, patch_artist=True)
-    for patch in bp1['boxes']:
-        patch.set_facecolor(COLORS['genesis_light'])
-    ax1.set_title('Genesis: Action-Observation Error Distribution\n(Action vs obs_33~44)', 
-                  fontsize=14, fontweight='bold')
-    ax1.set_ylabel('|Action - Obs|')
-    ax1.tick_params(axis='x', rotation=45)
-    ax1.grid(True, alpha=PLOT_CONFIG['alpha_grid'])
-    
-    # Choreonoid
-    cnoid_box_data = [cnoid_diffs[:, i] for i in range(12)]
-    bp2 = ax2.boxplot(cnoid_box_data, labels=JOINT_NAMES, patch_artist=True)
-    for patch in bp2['boxes']:
-        patch.set_facecolor(COLORS['choreonoid_light'])
-    ax2.set_title('Choreonoid: Action-Observation Error Distribution\n(Action vs obs_33~44)', 
-                  fontsize=14, fontweight='bold')
-    ax2.set_ylabel('|Action - Obs|')
-    ax2.tick_params(axis='x', rotation=45)
-    ax2.grid(True, alpha=PLOT_CONFIG['alpha_grid'])
-    
-    plt.tight_layout()
-    plt.savefig('comparison_plots/2_box_plot_comparison.png', 
-                dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
-    plt.show()
-    print("2. Box plot comparison saved as '2_box_plot_comparison.png'")
-
-def plot_3_heatmap():
-    """3. ヒートマップ比較"""
-    genesis_diffs, cnoid_diffs = get_common_data()
-    
-    # 統計値を計算
-    stats = {
-        'genesis': {
-            'mean': np.array([np.mean(genesis_diffs[:, i]) for i in range(12)]),
-            'std': np.array([np.std(genesis_diffs[:, i]) for i in range(12)]),
-            'max': np.array([np.max(genesis_diffs[:, i]) for i in range(12)])
-        },
-        'cnoid': {
-            'mean': np.array([np.mean(cnoid_diffs[:, i]) for i in range(12)]),
-            'std': np.array([np.std(cnoid_diffs[:, i]) for i in range(12)]),
-            'max': np.array([np.max(cnoid_diffs[:, i]) for i in range(12)])
-        }
-    }
-    
-    fig, axes = plt.subplots(3, 1, figsize=PLOT_CONFIG['figsize_medium'])
-    
-    # ヒートマップの設定
-    heatmap_configs = [
-        {'data': np.vstack([stats['genesis']['mean'], stats['cnoid']['mean']]),
-         'title': 'Mean Action-Observation Error Comparison\n(Action vs obs_33~44)',
-         'cmap': 'viridis'},
-        {'data': np.vstack([stats['genesis']['std'], stats['cnoid']['std']]),
-         'title': 'Standard Deviation Comparison',
-         'cmap': 'plasma'},
-        {'data': np.vstack([stats['genesis']['max'], stats['cnoid']['max']]),
-         'title': 'Maximum Error Comparison',
-         'cmap': 'inferno'}
-    ]
-    
-    for i, config in enumerate(heatmap_configs):
-        sns.heatmap(config['data'], 
-                    xticklabels=JOINT_NAMES,
-                    yticklabels=['Genesis', 'Choreonoid'],
-                    annot=True, fmt='.4f', cmap=config['cmap'], ax=axes[i])
-        axes[i].set_title(config['title'], fontsize=14, fontweight='bold')
-    
-    plt.tight_layout()
-    plt.savefig('comparison_plots/3_heatmap_comparison.png', 
-                dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
-    plt.show()
-    print("3. Heatmap comparison saved as '3_heatmap_comparison.png'")
-
-def calculate_leg_errors(diffs):
-    """右脚・左脚のエラーを計算"""
-    right_leg = np.sum(diffs[:, :6], axis=1)  # R_HIP_Y to R_ANKLE_R
-    left_leg = np.sum(diffs[:, 6:], axis=1)   # L_HIP_Y to L_ANKLE_R
-    return right_leg, left_leg
-
-def plot_4_cumulative_error():
-    """4. 累積誤差プロット"""
-    genesis_diffs, cnoid_diffs = get_common_data()
-    
-    # 各種エラーを計算
-    genesis_total_error = np.sum(genesis_diffs, axis=1)
-    cnoid_total_error = np.sum(cnoid_diffs, axis=1)
-    
-    genesis_right_leg, genesis_left_leg = calculate_leg_errors(genesis_diffs)
-    cnoid_right_leg, cnoid_left_leg = calculate_leg_errors(cnoid_diffs)
-    
-    fig, axes = plt.subplots(2, 2, figsize=PLOT_CONFIG['figsize_wide'])
-    
-    # 1. 全actionの累積誤差
-    axes[0, 0].plot(np.cumsum(genesis_total_error), label='Genesis', 
-                    linewidth=PLOT_CONFIG['linewidth_thick'], color=COLORS['genesis'])
-    axes[0, 0].plot(np.cumsum(cnoid_total_error), label='Choreonoid', 
-                    linewidth=PLOT_CONFIG['linewidth_thick'], color=COLORS['choreonoid'])
-    axes[0, 0].set_xlabel('Time Step')
-    axes[0, 0].set_ylabel('Cumulative Total Error')
-    axes[0, 0].set_title('Cumulative Total Error Over Time\n(Action vs obs_33~44)', fontweight='bold')
-    axes[0, 0].legend()
-    axes[0, 0].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
-    
-    # 2. 平時誤差
-    axes[0, 1].plot(genesis_total_error, label='Genesis', alpha=0.7, color=COLORS['genesis'])
-    axes[0, 1].plot(cnoid_total_error, label='Choreonoid', alpha=0.7, color=COLORS['choreonoid'])
-    axes[0, 1].set_xlabel('Time Step')
-    axes[0, 1].set_ylabel('Total Error per Step')
-    axes[0, 1].set_title('Total Error per Time Step', fontweight='bold')
-    axes[0, 1].legend()
-    axes[0, 1].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
-    
-    # 3. 右脚vs左脚の累積誤差
-    leg_plot_config = [
-        {'data': np.cumsum(genesis_right_leg), 'label': 'Genesis Right Leg', 
-         'style': '--', 'color': COLORS['genesis']},
-        {'data': np.cumsum(genesis_left_leg), 'label': 'Genesis Left Leg', 
-         'style': '-', 'color': COLORS['genesis']},
-        {'data': np.cumsum(cnoid_right_leg), 'label': 'Choreonoid Right Leg', 
-         'style': '--', 'color': COLORS['choreonoid']},
-        {'data': np.cumsum(cnoid_left_leg), 'label': 'Choreonoid Left Leg', 
-         'style': '-', 'color': COLORS['choreonoid']}
-    ]
-    
-    for config in leg_plot_config:
-        axes[1, 0].plot(config['data'], label=config['label'], 
-                       linestyle=config['style'], color=config['color'])
-    
-    axes[1, 0].set_xlabel('Time Step')
-    axes[1, 0].set_ylabel('Cumulative Error')
-    axes[1, 0].set_title('Cumulative Error: Right vs Left Leg', fontweight='bold')
-    axes[1, 0].legend()
-    axes[1, 0].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
-    
-    # 4. 統計サマリー
-    stats_data = {
-        'Genesis Total': [np.mean(genesis_total_error), np.std(genesis_total_error)],
-        'Choreonoid Total': [np.mean(cnoid_total_error), np.std(cnoid_total_error)],
-        'Genesis Right': [np.mean(genesis_right_leg), np.std(genesis_right_leg)],
-        'Choreonoid Right': [np.mean(cnoid_right_leg), np.std(cnoid_right_leg)],
-        'Genesis Left': [np.mean(genesis_left_leg), np.std(genesis_left_leg)],
-        'Choreonoid Left': [np.mean(cnoid_left_leg), np.std(cnoid_left_leg)]
-    }
-    
-    x_pos = np.arange(len(stats_data))
-    means = [stats_data[key][0] for key in stats_data.keys()]
-    stds = [stats_data[key][1] for key in stats_data.keys()]
-    
-    bar_colors = [COLORS['genesis_light'], COLORS['choreonoid_light'], 
-                  COLORS['genesis'], COLORS['choreonoid'], 
-                  COLORS['genesis_dark'], COLORS['choreonoid_dark']]
-    
-    bars = axes[1, 1].bar(x_pos, means, yerr=stds, capsize=5, alpha=0.7, color=bar_colors)
-    axes[1, 1].set_xlabel('Comparison Category')
-    axes[1, 1].set_ylabel('Mean Error ± Std')
-    axes[1, 1].set_title('Error Statistics Summary', fontweight='bold')
-    axes[1, 1].set_xticks(x_pos)
-    axes[1, 1].set_xticklabels(stats_data.keys(), rotation=45, ha='right')
-    axes[1, 1].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
-    
-    plt.tight_layout()
-    plt.savefig('comparison_plots/4_cumulative_error_analysis.png', 
-                dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
-    plt.show()
-    print("4. Cumulative error analysis saved as '4_cumulative_error_analysis.png'")
-
-def print_summary_statistics():
-    """統計サマリーを出力"""
-    genesis_diffs, cnoid_diffs = get_common_data()
-    
-    print("\n" + "="*90)
-    print("ACTION-OBSERVATION ERROR ANALYSIS (Action vs obs_33~44)")
-    print("="*90)
-    
-    print(f"{'Joint':<12} {'Genesis Mean':<13} {'Genesis Std':<12} {'Choreonoid Mean':<15} {'Choreonoid Std':<14} {'Difference':<10}")
-    print("-"*90)
+    fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
+    axes = axes.flatten()
     
     for i in range(12):
-        g_mean = np.mean(genesis_diffs[:, i])
-        g_std = np.std(genesis_diffs[:, i])
-        c_mean = np.mean(cnoid_diffs[:, i])
-        c_std = np.std(cnoid_diffs[:, i])
-        diff = g_mean - c_mean
+        axes[i].plot(steps, genesis_dof_vel[:, i], 
+                    label='Genesis', 
+                    color=COLORS['genesis_ang_vel'],  # 速度なので角速度色を使用
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'])
         
-        print(f"{JOINT_NAMES[i]:<12} {g_mean:<13.6f} {g_std:<12.6f} {c_mean:<15.6f} {c_std:<14.6f} {diff:<10.6f}")
+        axes[i].plot(steps, cnoid_dof_vel[:, i], 
+                    label='Choreonoid', 
+                    color=COLORS['choreonoid_ang_vel'],
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'])
+        
+        axes[i].set_title(f'{JOINT_NAMES[i]} Velocity (obs_{21+i})', 
+                         fontsize=12, fontweight='bold')
+        axes[i].set_xlabel('Time Step')
+        axes[i].set_ylabel('Joint Velocity [rad/s]')
+        axes[i].legend(fontsize=8)
+        axes[i].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
+        
+        # 統計情報を表示
+        g_mean = np.mean(genesis_dof_vel[:, i])
+        c_mean = np.mean(cnoid_dof_vel[:, i])
+        diff_mean = np.mean(np.abs(genesis_dof_vel[:, i] - cnoid_dof_vel[:, i]))
+        
+        axes[i].text(0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nΔ: {diff_mean:.4f}', 
+                    transform=axes[i].transAxes, 
+                    verticalalignment='top',
+                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8),
+                    fontsize=8)
+    
+    plt.suptitle('Genesis vs Choreonoid: Joint Velocity Comparison\n(obs_21~32: dof_vel)', 
+                 fontsize=16, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig('obs_comparison_plots/dof_vel_comparison.png', 
+                dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
+    plt.show()
+    print("✓ Joint velocity comparison plot saved")
+
+def plot_action_comparison(data):
+    """Action値比較 (obs_33~44)"""
+    genesis_actions = data['genesis_actions']
+    cnoid_actions = data['cnoid_actions']
+    
+    steps = np.arange(len(genesis_actions))
+    
+    fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
+    axes = axes.flatten()
+    
+    for i in range(12):
+        axes[i].plot(steps, genesis_actions[:, i], 
+                    label='Genesis', 
+                    color=COLORS['genesis_action'],
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'])
+        
+        axes[i].plot(steps, cnoid_actions[:, i], 
+                    label='Choreonoid', 
+                    color=COLORS['choreonoid_action'],
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'])
+        
+        axes[i].set_title(f'{JOINT_NAMES[i]} Action (obs_{33+i})', 
+                         fontsize=12, fontweight='bold')
+        axes[i].set_xlabel('Time Step')
+        axes[i].set_ylabel('Action Value')
+        axes[i].legend(fontsize=8)
+        axes[i].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
+        
+        # 統計情報を表示
+        g_mean = np.mean(genesis_actions[:, i])
+        c_mean = np.mean(cnoid_actions[:, i])
+        diff_mean = np.mean(np.abs(genesis_actions[:, i] - cnoid_actions[:, i]))
+        
+        axes[i].text(0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nΔ: {diff_mean:.4f}', 
+                    transform=axes[i].transAxes, 
+                    verticalalignment='top',
+                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8),
+                    fontsize=8)
+    
+    plt.suptitle('Genesis vs Choreonoid: Action Values Comparison\n(obs_33~44: actions)', 
+                 fontsize=16, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig('obs_comparison_plots/action_comparison.png', 
+                dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
+    plt.show()
+    print("✓ Action comparison plot saved")
+
+def plot_comprehensive_comparison(data):
+    """包括的比較：各関節について3つの要素を同時表示"""
+    genesis_dof_pos = data['genesis_dof_pos']
+    cnoid_dof_pos = data['cnoid_dof_pos']
+    genesis_dof_vel = data['genesis_dof_vel']
+    cnoid_dof_vel = data['cnoid_dof_vel']
+    genesis_actions = data['genesis_actions']
+    cnoid_actions = data['cnoid_actions']
+    
+    steps = np.arange(len(genesis_dof_pos))
+    
+    # 最初の4関節について詳細比較
+    fig, axes = plt.subplots(4, 3, figsize=PLOT_CONFIG['figsize_large'])
+    
+    for joint_idx in range(4):  # 最初の4関節
+        joint_name = JOINT_NAMES[joint_idx]
+        
+        # Position (obs_9~20)
+        axes[joint_idx, 0].plot(steps, genesis_dof_pos[:, joint_idx], 
+                               label='Genesis', color=COLORS['genesis_dof_pos'], 
+                               linewidth=2, alpha=0.8)
+        axes[joint_idx, 0].plot(steps, cnoid_dof_pos[:, joint_idx], 
+                               label='Choreonoid', color=COLORS['choreonoid_dof_pos'], 
+                               linewidth=2, alpha=0.8)
+        axes[joint_idx, 0].set_title(f'{joint_name} - Position')
+        axes[joint_idx, 0].set_ylabel('Position [rad]')
+        axes[joint_idx, 0].legend(fontsize=8)
+        axes[joint_idx, 0].grid(True, alpha=0.3)
+        
+        # Velocity (obs_21~32)
+        axes[joint_idx, 1].plot(steps, genesis_dof_vel[:, joint_idx], 
+                               label='Genesis', color=COLORS['genesis_ang_vel'], 
+                               linewidth=2, alpha=0.8)
+        axes[joint_idx, 1].plot(steps, cnoid_dof_vel[:, joint_idx], 
+                               label='Choreonoid', color=COLORS['choreonoid_ang_vel'], 
+                               linewidth=2, alpha=0.8)
+        axes[joint_idx, 1].set_title(f'{joint_name} - Velocity')
+        axes[joint_idx, 1].set_ylabel('Velocity [rad/s]')
+        axes[joint_idx, 1].legend(fontsize=8)
+        axes[joint_idx, 1].grid(True, alpha=0.3)
+        
+        # Action (obs_33~44)
+        axes[joint_idx, 2].plot(steps, genesis_actions[:, joint_idx], 
+                               label='Genesis', color=COLORS['genesis_action'], 
+                               linewidth=2, alpha=0.8)
+        axes[joint_idx, 2].plot(steps, cnoid_actions[:, joint_idx], 
+                               label='Choreonoid', color=COLORS['choreonoid_action'], 
+                               linewidth=2, alpha=0.8)
+        axes[joint_idx, 2].set_title(f'{joint_name} - Action')
+        axes[joint_idx, 2].set_ylabel('Action Value')
+        axes[joint_idx, 2].legend(fontsize=8)
+        axes[joint_idx, 2].grid(True, alpha=0.3)
+        
+        # X軸ラベルは最下段のみ
+        if joint_idx == 3:
+            axes[joint_idx, 0].set_xlabel('Time Step')
+            axes[joint_idx, 1].set_xlabel('Time Step')
+            axes[joint_idx, 2].set_xlabel('Time Step')
+    
+    plt.suptitle('Comprehensive Comparison: Position, Velocity, Action\n(First 4 Joints)', 
+                 fontsize=16, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig('obs_comparison_plots/comprehensive_comparison.png', 
+                dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
+    plt.show()
+    print("✓ Comprehensive comparison plot saved")
+
+def plot_difference_analysis(data):
+    """差分分析：各要素の差分を可視化"""
+    genesis_dof_pos = data['genesis_dof_pos']
+    cnoid_dof_pos = data['cnoid_dof_pos']
+    genesis_dof_vel = data['genesis_dof_vel']
+    cnoid_dof_vel = data['cnoid_dof_vel']
+    genesis_actions = data['genesis_actions']
+    cnoid_actions = data['cnoid_actions']
+    
+    # 差分計算
+    pos_diff = np.abs(genesis_dof_pos - cnoid_dof_pos)
+    vel_diff = np.abs(genesis_dof_vel - cnoid_dof_vel)
+    action_diff = np.abs(genesis_actions - cnoid_actions)
+    
+    steps = np.arange(len(pos_diff))
+    
+    fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
+    axes = axes.flatten()
+    
+    for i in range(12):
+        axes[i].plot(steps, pos_diff[:, i], 
+                    label='|Genesis - Choreonoid| Position', 
+                    color=COLORS['genesis_dof_pos'], linewidth=2, alpha=0.8)
+        
+        axes[i].plot(steps, vel_diff[:, i], 
+                    label='|Genesis - Choreonoid| Velocity', 
+                    color=COLORS['genesis_ang_vel'], linewidth=2, alpha=0.8)
+        
+        axes[i].plot(steps, action_diff[:, i], 
+                    label='|Genesis - Choreonoid| Action', 
+                    color=COLORS['genesis_action'], linewidth=2, alpha=0.8)
+        
+        axes[i].set_title(f'{JOINT_NAMES[i]} - Differences', fontsize=12, fontweight='bold')
+        axes[i].set_xlabel('Time Step')
+        axes[i].set_ylabel('Absolute Difference')
+        axes[i].legend(fontsize=6)
+        axes[i].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
+        axes[i].set_yscale('log')  # 対数スケール
+        
+        # 平均差分を表示
+        pos_mean = np.mean(pos_diff[:, i])
+        vel_mean = np.mean(vel_diff[:, i])
+        action_mean = np.mean(action_diff[:, i])
+        
+        axes[i].text(0.02, 0.02, 
+                    f'Pos: {pos_mean:.4f}\nVel: {vel_mean:.4f}\nAct: {action_mean:.4f}', 
+                    transform=axes[i].transAxes,
+                    bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.7),
+                    fontsize=8)
+    
+    plt.suptitle('Difference Analysis: |Genesis - Choreonoid| (Log Scale)\n' + 
+                 'Position (obs_9~20), Velocity (obs_21~32), Action (obs_33~44)', 
+                 fontsize=16, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig('obs_comparison_plots/difference_analysis.png', 
+                dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
+    plt.show()
+    print("✓ Difference analysis plot saved")
+
+def print_comprehensive_statistics(data):
+    """包括的な統計情報を出力"""
+    genesis_ang_vel = data['genesis_ang_vel']
+    cnoid_ang_vel = data['cnoid_ang_vel']
+    genesis_dof_pos = data['genesis_dof_pos']
+    cnoid_dof_pos = data['cnoid_dof_pos']
+    genesis_dof_vel = data['genesis_dof_vel']
+    cnoid_dof_vel = data['cnoid_dof_vel']
+    genesis_actions = data['genesis_actions']
+    cnoid_actions = data['cnoid_actions']
+    
+    print("\n" + "="*120)
+    print("COMPREHENSIVE OBSERVATION COMPARISON ANALYSIS")
+    print("="*120)
+    
+    # Base Angular Velocity統計
+    print("\n--- BASE ANGULAR VELOCITY (obs_0~2) ---")
+    ang_vel_names = ['Roll Rate', 'Pitch Rate', 'Yaw Rate']
+    for i in range(3):
+        g_mean = np.mean(genesis_ang_vel[:, i])
+        c_mean = np.mean(cnoid_ang_vel[:, i])
+        diff_mean = np.mean(np.abs(genesis_ang_vel[:, i] - cnoid_ang_vel[:, i]))
+        print(f"{ang_vel_names[i]:<12} G:{g_mean:>8.4f} C:{c_mean:>8.4f} Diff:{diff_mean:>8.4f}")
+    
+    # Joint統計のヘッダー
+    print(f"\n--- JOINT ANALYSIS (12 joints) ---")
+    print(f"{'Joint':<12} {'G_Pos':<8} {'C_Pos':<8} {'G_Vel':<8} {'C_Vel':<8} {'G_Act':<8} {'C_Act':<8} " +
+          f"{'|Pos|':<8} {'|Vel|':<8} {'|Act|':<8}")
+    print("-"*120)
+    
+    for i in range(12):
+        # 平均値計算
+        g_pos_mean = np.mean(genesis_dof_pos[:, i])
+        c_pos_mean = np.mean(cnoid_dof_pos[:, i])
+        g_vel_mean = np.mean(genesis_dof_vel[:, i])
+        c_vel_mean = np.mean(cnoid_dof_vel[:, i])
+        g_act_mean = np.mean(genesis_actions[:, i])
+        c_act_mean = np.mean(cnoid_actions[:, i])
+        
+        # 差分計算
+        pos_diff = np.mean(np.abs(genesis_dof_pos[:, i] - cnoid_dof_pos[:, i]))
+        vel_diff = np.mean(np.abs(genesis_dof_vel[:, i] - cnoid_dof_vel[:, i]))
+        act_diff = np.mean(np.abs(genesis_actions[:, i] - cnoid_actions[:, i]))
+        
+        print(f"{JOINT_NAMES[i]:<12} {g_pos_mean:<8.3f} {c_pos_mean:<8.3f} " +
+              f"{g_vel_mean:<8.3f} {c_vel_mean:<8.3f} {g_act_mean:<8.3f} {c_act_mean:<8.3f} " +
+              f"{pos_diff:<8.4f} {vel_diff:<8.4f} {act_diff:<8.4f}")
     
     # 全体統計
-    genesis_total = np.sum(genesis_diffs, axis=1)
-    cnoid_total = np.sum(cnoid_diffs, axis=1)
-    
-    print("\n" + "-"*90)
+    print("\n" + "-"*120)
     print("OVERALL STATISTICS")
-    print("-"*90)
-    print(f"Genesis Total Error:     Mean={np.mean(genesis_total):.6f}, Std={np.std(genesis_total):.6f}")
-    print(f"Choreonoid Total Error:  Mean={np.mean(cnoid_total):.6f}, Std={np.std(cnoid_total):.6f}")
-    print(f"Difference (G-C):        {np.mean(genesis_total) - np.mean(cnoid_total):.6f}")
+    print("-"*120)
     
-    # データ構造の確認情報
-    print("\n" + "-"*90)
-    print("DATA VERIFICATION")
-    print("-"*90)
-    print("Observation structure:")
-    print("- obs_0~2:   base_ang_vel (3)")
-    print("- obs_3~5:   projected_gravity (3)")
-    print("- obs_6~8:   commands (3)")
-    print("- obs_9~20:  dof_pos - default_dof_pos (12)")
-    print("- obs_21~32: dof_vel (12)")
-    print("- obs_33~44: actions (12) ← Compared with action_0~11")
+    # 全要素の平均差分
+    overall_pos_diff = np.mean(np.abs(genesis_dof_pos - cnoid_dof_pos))
+    overall_vel_diff = np.mean(np.abs(genesis_dof_vel - cnoid_dof_vel))
+    overall_act_diff = np.mean(np.abs(genesis_actions - cnoid_actions))
+    overall_ang_vel_diff = np.mean(np.abs(genesis_ang_vel - cnoid_ang_vel))
+    
+    print(f"Base Angular Velocity difference:  {overall_ang_vel_diff:.6f}")
+    print(f"Joint Position difference:         {overall_pos_diff:.6f}")
+    print(f"Joint Velocity difference:         {overall_vel_diff:.6f}")
+    print(f"Action difference:                 {overall_act_diff:.6f}")
+    
+    # 比率分析
+    print(f"\nComponent Analysis:")
+    total_diff = overall_pos_diff + overall_vel_diff + overall_act_diff
+    print(f"Position contribution: {overall_pos_diff/total_diff*100:.1f}%")
+    print(f"Velocity contribution: {overall_vel_diff/total_diff*100:.1f}%")
+    print(f"Action contribution:   {overall_act_diff/total_diff*100:.1f}%")
 
 def main():
     """メイン実行関数"""
-    print("Action-Observation Error Analysis Starting...")
-    print("Comparing action_0~11 with obs_33~44 (actions in observation)")
-    print("="*70)
+    print("=" * 80)
+    print("GENESIS vs CHOREONOID: OBSERVATION COMPARISON ANALYSIS")
+    print("=" * 80)
+    print("Analysis includes:")
+    print("1. Base Angular Velocity (obs_0~2)")
+    print("2. Joint Positions (obs_9~20)")
+    print("3. Joint Velocities (obs_21~32)")
+    print("4. Action Values (obs_33~44)")
+    print("-" * 80)
     
-    # 4つの比較プロットを生成
-    plot_functions = [plot_1_time_series, plot_2_box_plots, plot_3_heatmap, plot_4_cumulative_error]
+    # データ読み込みと抽出
+    genesis_df, cnoid_df = load_data()
+    data = extract_obs_components(genesis_df, cnoid_df)
+    
+    # 5つのプロットを生成
+    plot_functions = [
+        plot_base_ang_vel_comparison,
+        plot_dof_pos_comparison,
+        plot_dof_vel_comparison,
+        plot_action_comparison,
+        plot_comprehensive_comparison,
+        plot_difference_analysis
+    ]
     
     for plot_func in plot_functions:
-        plot_func()
+        plot_func(data)
     
     # 統計サマリーを出力
-    print_summary_statistics()
+    print_comprehensive_statistics(data)
     
-    print("\n" + "="*70)
-    print("All plots saved in 'comparison_plots/' directory:")
-    print("1. 1_time_series_comparison.png")
-    print("2. 2_box_plot_comparison.png")
-    print("3. 3_heatmap_comparison.png")
-    print("4. 4_cumulative_error_analysis.png")
-    print("="*70)
+    print("\n" + "=" * 80)
+    print("All plots saved in 'obs_comparison_plots/' directory:")
+    print("1. base_ang_vel_comparison.png")
+    print("2. dof_pos_comparison.png")
+    print("3. dof_vel_comparison.png")
+    print("4. action_comparison.png")
+    print("5. comprehensive_comparison.png")
+    print("6. difference_analysis.png")
+    print("=" * 80)
 
 if __name__ == "__main__":
     main()
