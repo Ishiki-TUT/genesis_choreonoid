@@ -128,10 +128,8 @@ def get_cfgs():
         },
         
         # termination
-        # "termination_if_roll_greater_than": 10,  # degree
-        # "termination_if_pitch_greater_than": 10,
-        "termination_if_roll_greater_than": 60,  # degree
-        "termination_if_pitch_greater_than": 60,
+        "termination_if_roll_greater_than": 10,  # degree
+        "termination_if_pitch_greater_than": 10,
         # "termination_if_roll_greater_than": 15,  # degree
         # "termination_if_pitch_greater_than": 5,
         # base pose
@@ -179,9 +177,10 @@ def get_cfgs():
     }
     command_cfg = {
         "num_commands": 3,
-        "lin_vel_x_range": [0.5, 0.5],
+        # "lin_vel_x_range": [0.5, 0.5],
         # "lin_vel_x_range": [0.0, 1.0],歩行速度を上げるとどうなる？
         # "lin_vel_x_range": [1.0, 1.5], # 人間と同じくらいの速度に設定
+        "lin_vel_x_range": [0.0, 0.0], # 速度指令なし
         "lin_vel_y_range": [0, 0],
         "ang_vel_range": [0, 0],
     }
@@ -191,7 +190,7 @@ def get_cfgs():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--exp_name", type=str, default="ishiki-walking-test")
+    parser.add_argument("-e", "--exp_name", type=str, default="ishiki-walking-no-vel")
     parser.add_argument("-B", "--num_envs", type=int, default=4096)
     parser.add_argument("--max_iterations", type=int, default=2001) # 101
     parser.add_argument("--resume", type=str, default=None)

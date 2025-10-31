@@ -353,9 +353,9 @@ class RLEnvBase:
         # Penalize joint poses far away from default pose
         return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1)
 
-    # def _reward_base_height(self):
-    #     # Penalize base height away from target
-    #     return torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
+    def _reward_base_height(self):
+        # Penalize base height away from target
+        return torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
 
     def _reward_effort(self):
         # Penalize effort
