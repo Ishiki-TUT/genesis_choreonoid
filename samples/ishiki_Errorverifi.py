@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import os
+import argparse
 
 # 共通設定
 plt.rcParams['font.family'] = 'DejaVu Sans'
@@ -31,15 +32,15 @@ PLOT_CONFIG = {
     'linewidth': 2
 }
 
-# 結果保存用ディレクトリ作成
-os.makedirs('obs_comparison_plots_scale0.25', exist_ok=True)
+# グローバル変数として保存先を定義
+OUTPUT_DIR = 'obs_comparison_plots'  # デフォルト値
 
 def load_data():
     """データ読み込み"""
     print("Loading data...")
     genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
-    # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_simple.csv')
-    cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale0.25.csv')
+    cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale1.0.csv')
+    # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale0.25.csv')
 
     print(f"Genesis data shape: {genesis_df.shape}")
     print(f"Choreonoid data shape: {cnoid_df.shape}")
@@ -132,7 +133,7 @@ def plot_base_ang_vel_comparison(data):
     plt.suptitle('Genesis vs Choreonoid: Base Angular Velocity Comparison\n(obs_0~2)', 
                  fontsize=16, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('obs_comparison_plots/base_ang_vel_comparison.png', 
+    plt.savefig(f'{OUTPUT_DIR}/base_ang_vel_comparison.png', 
                 dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
     plt.show()
     print("✓ Base angular velocity comparison plot saved")
@@ -181,7 +182,7 @@ def plot_dof_pos_comparison(data):
     plt.suptitle('Genesis vs Choreonoid: Joint Position Comparison\n(obs_9~20: dof_pos - default_dof_pos)', 
                  fontsize=16, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('obs_comparison_plots/dof_pos_comparison.png', 
+    plt.savefig(f'{OUTPUT_DIR}/dof_pos_comparison.png', 
                 dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
     plt.show()
     print("✓ Joint position comparison plot saved")
@@ -230,7 +231,7 @@ def plot_dof_vel_comparison(data):
     plt.suptitle('Genesis vs Choreonoid: Joint Velocity Comparison\n(obs_21~32: dof_vel)', 
                  fontsize=16, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('obs_comparison_plots/dof_vel_comparison.png', 
+    plt.savefig(f'{OUTPUT_DIR}/dof_vel_comparison.png', 
                 dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
     plt.show()
     print("✓ Joint velocity comparison plot saved")
@@ -279,7 +280,7 @@ def plot_action_comparison(data):
     plt.suptitle('Genesis vs Choreonoid: Action Values Comparison\n(obs_33~44: actions)', 
                  fontsize=16, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('obs_comparison_plots/action_comparison.png', 
+    plt.savefig(f'{OUTPUT_DIR}/action_comparison.png', 
                 dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
     plt.show()
     print("✓ Action comparison plot saved")
@@ -346,7 +347,7 @@ def plot_comprehensive_comparison(data):
     plt.suptitle('Comprehensive Comparison: Position, Velocity, Action\n(First 4 Joints)', 
                  fontsize=16, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('obs_comparison_plots/comprehensive_comparison.png', 
+    plt.savefig(f'{OUTPUT_DIR}/comprehensive_comparison.png', 
                 dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
     plt.show()
     print("✓ Comprehensive comparison plot saved")
@@ -405,7 +406,7 @@ def plot_difference_analysis(data):
                  'Position (obs_9~20), Velocity (obs_21~32), Action (obs_33~44)', 
                  fontsize=16, fontweight='bold')
     plt.tight_layout()
-    plt.savefig('obs_comparison_plots/difference_analysis.png', 
+    plt.savefig(f'{OUTPUT_DIR}/difference_analysis.png', 
                 dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
     plt.show()
     print("✓ Difference analysis plot saved")
@@ -482,6 +483,26 @@ def print_comprehensive_statistics(data):
     print(f"Action contribution:   {overall_act_diff/total_diff*100:.1f}%")
 
 def main():
+    global OUTPUT_DIR  # グローバル変数を使用
+    
+    parser = argparse.ArgumentParser(description="Genesis vs Choreonoid observation comparison")
+    parser.add_argument("-o", "--output", type=str, default="obs_comparison_plots",
+                        help="Output directory for plots (default: obs_comparison_plots)")
+    parser.add_argument("--genesis-file", type=str, 
+                        default="obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv",
+                        help="Genesis data file path")
+    parser.add_argument("--choreonoid-file", type=str,
+                        default="obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale0.25.csv", 
+                        help="Choreonoid data file path")
+    args = parser.parse_args()
+    
+    # 出力ディレクトリを設定
+    OUTPUT_DIR = args.output
+    
+    # 出力ディレクトリを作成
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    print(f"Output directory: {os.path.abspath(OUTPUT_DIR)}")
+    
     """メイン実行関数"""
     print("=" * 80)
     print("GENESIS vs CHOREONOID: OBSERVATION COMPARISON ANALYSIS")
@@ -497,7 +518,7 @@ def main():
     genesis_df, cnoid_df = load_data()
     data = extract_obs_components(genesis_df, cnoid_df)
     
-    # 5つのプロットを生成
+    # 6つのプロットを生成
     plot_functions = [
         plot_base_ang_vel_comparison,
         plot_dof_pos_comparison,
@@ -514,7 +535,7 @@ def main():
     print_comprehensive_statistics(data)
     
     print("\n" + "=" * 80)
-    print("All plots saved in 'obs_comparison_plots/' directory:")
+    print(f"All plots saved in '{OUTPUT_DIR}/' directory:")
     print("1. base_ang_vel_comparison.png")
     print("2. dof_pos_comparison.png")
     print("3. dof_vel_comparison.png")
