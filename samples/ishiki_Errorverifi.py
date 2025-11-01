@@ -32,14 +32,15 @@ PLOT_CONFIG = {
 }
 
 # 結果保存用ディレクトリ作成
-os.makedirs('obs_comparison_plots', exist_ok=True)
+os.makedirs('obs_comparison_plots_scale0.25', exist_ok=True)
 
 def load_data():
     """データ読み込み"""
     print("Loading data...")
     genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
-    cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_simple.csv')
-    
+    # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_simple.csv')
+    cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale0.25.csv')
+
     print(f"Genesis data shape: {genesis_df.shape}")
     print(f"Choreonoid data shape: {cnoid_df.shape}")
     
