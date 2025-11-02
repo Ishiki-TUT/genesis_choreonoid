@@ -15,8 +15,8 @@ class RLEnvChoreonoid(RLEnvBase):
         super().__init__(num_envs, env_cfg, obs_cfg, reward_cfg, command_cfg, show_viewer, device, dt, substeps, robot_urdf_path)
 
     def build_environment(self):
-        # ib.loadRobotItem(cutil.getShareDirectory() + '/model/misc/floor.body')
-        ib.loadRobotItem(cutil.getShareDirectory() + '/model/misc/floor3.body') # 反発係数0指定の床
+        ib.loadRobotItem(cutil.getShareDirectory() + '/model/misc/floor.body')
+        # ib.loadRobotItem(cutil.getShareDirectory() + '/model/misc/floor3.body') # 反発係数0指定の床
 
     def scene_build(self, substeps, robot_urdf_path, show_viewer):
         #self.srobot = setupSim()
