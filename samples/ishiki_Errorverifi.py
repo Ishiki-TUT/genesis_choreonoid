@@ -20,6 +20,9 @@ COLORS = {
     'choreonoid_ang_vel': '#d62728',   # 赤系
     'choreonoid_dof_pos': '#9467bd',   # 紫系
     'choreonoid_action': '#8c564b',    # 茶系
+    # 追加: トルク
+    'genesis_torque': '#17becf',       # ティール
+    'choreonoid_torque': '#e377c2',    # ピンク
 }
 
 PLOT_CONFIG = {
@@ -52,34 +55,54 @@ def extract_obs_components(genesis_df, cnoid_df):
     """
     観測値の各成分を抽出
     観測値の構造:
-    - obs_0~2:   base_ang_vel (3) - 基準座標系での角速度
-    - obs_3~5:   projected_gravity (3) - 重力ベクトル
-    - obs_6~8:   commands (3) - コマンド値
-    - obs_9~20:  dof_pos - default_dof_pos (12) - 関節角度（デフォルトからの差分）
-    - obs_21~32: dof_vel (12) - 関節角速度
-    - obs_33~44: actions (12) - アクション値
+    - obs_0~2:   base_ang_vel (3)
+    - obs_3~5:   projected_gravity (3)
+    - obs_6~8:   commands (3)
+    - obs_9~20:  dof_pos - default_dof_pos (12)
+    - obs_21~32: dof_vel (12)
+    - obs_33~44: actions (12)
+    - torque_0~11: torques (12)  ← あれば読む
     """
-    
     # 共通のステップ数を確認
     min_steps = min(len(genesis_df), len(cnoid_df))
     print(f"Analyzing {min_steps} steps")
     
-    # Base angular velocity (obs_0~2) - ベース角速度
+    # Base angular velocity (obs_0~2)
     genesis_ang_vel = np.array([genesis_df[f'obs_{i}'].iloc[:min_steps] for i in range(3)]).T
     cnoid_ang_vel = np.array([cnoid_df[f'obs_{i}'].iloc[:min_steps] for i in range(3)]).T
-    
-    # Joint positions (obs_9~20) - 関節位置（12関節）
+
+    # Joint positions (obs_9~20)
     genesis_dof_pos = np.array([genesis_df[f'obs_{9+i}'].iloc[:min_steps] for i in range(12)]).T
     cnoid_dof_pos = np.array([cnoid_df[f'obs_{9+i}'].iloc[:min_steps] for i in range(12)]).T
-    
-    # Joint velocities (obs_21~32) - 関節速度（12関節）
+
+    # Joint velocities (obs_21~32)
     genesis_dof_vel = np.array([genesis_df[f'obs_{21+i}'].iloc[:min_steps] for i in range(12)]).T
     cnoid_dof_vel = np.array([cnoid_df[f'obs_{21+i}'].iloc[:min_steps] for i in range(12)]).T
-    
-    # Actions (obs_33~44) - アクション値（12関節）
+
+    # Actions (obs_33~44)
     genesis_actions = np.array([genesis_df[f'obs_{33+i}'].iloc[:min_steps] for i in range(12)]).T
     cnoid_actions = np.array([cnoid_df[f'obs_{33+i}'].iloc[:min_steps] for i in range(12)]).T
-    
+
+    # Torques (torque_0~11) — 存在チェックして読込
+    torque_cols = [f"torque_{i}" for i in range(12)]
+    has_g_torque = all((c in genesis_df.columns) for c in torque_cols)
+    has_c_torque = all((c in cnoid_df.columns) for c in torque_cols)
+    if has_g_torque and has_c_torque:
+        # 数値化してNaNを補間→0埋め
+        for col in torque_cols:
+            genesis_df[col] = pd.to_numeric(genesis_df[col], errors="coerce")
+            cnoid_df[col]   = pd.to_numeric(cnoid_df[col],   errors="coerce")
+        genesis_df[torque_cols] = genesis_df[torque_cols].fillna(method="ffill").fillna(0.0)
+        cnoid_df[torque_cols]   = cnoid_df[torque_cols].fillna(method="ffill").fillna(0.0)
+
+        min_steps = min(len(genesis_df), len(cnoid_df))
+        genesis_torque = np.array([genesis_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
+        cnoid_torque   = np.array([cnoid_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
+    else:
+        genesis_torque = None
+        cnoid_torque = None
+        print("Info: torque_0..11 columns not found in one or both CSVs. Skipping torque plots.")
+
     return {
         'genesis_ang_vel': genesis_ang_vel,
         'cnoid_ang_vel': cnoid_ang_vel,
@@ -88,7 +111,9 @@ def extract_obs_components(genesis_df, cnoid_df):
         'genesis_dof_vel': genesis_dof_vel,
         'cnoid_dof_vel': cnoid_dof_vel,
         'genesis_actions': genesis_actions,
-        'cnoid_actions': cnoid_actions
+        'cnoid_actions': cnoid_actions,
+        'genesis_torque': genesis_torque,
+        'cnoid_torque': cnoid_torque,
     }
 
 def plot_base_ang_vel_comparison(data):
@@ -286,6 +311,54 @@ def plot_action_comparison(data):
     plt.show()
     print("✓ Action comparison plot saved")
 
+def plot_torque_comparison(data):
+    """Torque比較 (torque_0~11)"""
+    genesis_torque = data.get('genesis_torque', None)
+    cnoid_torque = data.get('cnoid_torque', None)
+    if genesis_torque is None or cnoid_torque is None:
+        print("Skip torque comparison (no torque columns).")
+        return
+
+    steps = np.arange(len(genesis_torque))
+    fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
+    axes = axes.flatten()
+
+    for i in range(12):
+        axes[i].plot(
+            steps, genesis_torque[:, i],
+            label='Genesis', color=COLORS['genesis_torque'],
+            linewidth=PLOT_CONFIG['linewidth'], alpha=PLOT_CONFIG['alpha_line'],
+        )
+        axes[i].plot(
+            steps, cnoid_torque[:, i],
+            label='Choreonoid', color=COLORS['choreonoid_torque'],
+            linewidth=PLOT_CONFIG['linewidth'], alpha=PLOT_CONFIG['alpha_line'],
+        )
+        axes[i].set_title(f'{JOINT_NAMES[i]} Torque', fontsize=12, fontweight='bold')
+        axes[i].set_xlabel('Time Step')
+        axes[i].set_ylabel('Torque [Nm]')
+        axes[i].legend(fontsize=8)
+        axes[i].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
+
+        # 統計情報
+        g_mean = np.mean(genesis_torque[:, i])
+        c_mean = np.mean(cnoid_torque[:, i])
+        diff_mean = np.mean(np.abs(genesis_torque[:, i] - cnoid_torque[:, i]))
+        axes[i].text(
+            0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nΔ: {diff_mean:.4f}',
+            transform=axes[i].transAxes, verticalalignment='top',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8),
+            fontsize=8,
+        )
+
+    plt.suptitle('Genesis vs Choreonoid: Joint Torque Comparison\n(torque_0~11)', 
+                 fontsize=16, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(f'{OUTPUT_DIR}/torque_comparison.png',
+                dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
+    plt.show()
+    print("✓ Torque comparison plot saved")
+
 def plot_comprehensive_comparison(data):
     """包括的比較：各関節について3つの要素を同時表示"""
     genesis_dof_pos = data['genesis_dof_pos']
@@ -422,6 +495,8 @@ def print_comprehensive_statistics(data):
     cnoid_dof_vel = data['cnoid_dof_vel']
     genesis_actions = data['genesis_actions']
     cnoid_actions = data['cnoid_actions']
+    genesis_torque = data.get('genesis_torque', None)
+    cnoid_torque = data.get('cnoid_torque', None)
     
     print("\n" + "="*120)
     print("COMPREHENSIVE OBSERVATION COMPARISON ANALYSIS")
@@ -476,9 +551,16 @@ def print_comprehensive_statistics(data):
     print(f"Joint Velocity difference:         {overall_vel_diff:.6f}")
     print(f"Action difference:                 {overall_act_diff:.6f}")
     
+    if genesis_torque is not None and cnoid_torque is not None:
+        overall_torque_diff = np.mean(np.abs(genesis_torque - cnoid_torque))
+        print(f"Torque difference:                  {overall_torque_diff:.6f}")
+
     # 比率分析
     print(f"\nComponent Analysis:")
     total_diff = overall_pos_diff + overall_vel_diff + overall_act_diff
+    if genesis_torque is not None and cnoid_torque is not None:
+        total_diff += overall_torque_diff
+        print(f"Torque contribution:   {overall_torque_diff/total_diff*100:.1f}%")
     print(f"Position contribution: {overall_pos_diff/total_diff*100:.1f}%")
     print(f"Velocity contribution: {overall_vel_diff/total_diff*100:.1f}%")
     print(f"Action contribution:   {overall_act_diff/total_diff*100:.1f}%")
@@ -518,20 +600,23 @@ def main():
     # データ読み込みと抽出
     genesis_df, cnoid_df = load_data()
     data = extract_obs_components(genesis_df, cnoid_df)
-    
-    # 6つのプロットを生成
+
+    # 生成するプロット
     plot_functions = [
         plot_base_ang_vel_comparison,
         plot_dof_pos_comparison,
         plot_dof_vel_comparison,
         plot_action_comparison,
         plot_comprehensive_comparison,
-        plot_difference_analysis
+        plot_difference_analysis,
     ]
-    
+    # トルクがあれば追加
+    if data.get('genesis_torque') is not None and data.get('cnoid_torque') is not None:
+        plot_functions.insert(3, plot_torque_comparison)  # アクションの前後どちらでもOK
+
     for plot_func in plot_functions:
         plot_func(data)
-    
+
     # 統計サマリーを出力
     print_comprehensive_statistics(data)
     
@@ -540,10 +625,24 @@ def main():
     print("1. base_ang_vel_comparison.png")
     print("2. dof_pos_comparison.png")
     print("3. dof_vel_comparison.png")
-    print("4. action_comparison.png")
-    print("5. comprehensive_comparison.png")
-    print("6. difference_analysis.png")
+    if data.get('genesis_torque') is not None and data.get('cnoid_torque') is not None:
+        print("4. torque_comparison.png")
+        print("5. action_comparison.png")
+        print("6. comprehensive_comparison.png")
+        print("7. difference_analysis.png")
+    else:
+        print("4. action_comparison.png")
+        print("5. comprehensive_comparison.png")
+        print("6. difference_analysis.png")
     print("=" * 80)
 
-if __name__ == "__main__":
-    main()
+
+if __name__ == "__main__":  main()
+
+"""
+# 使用例:
+# データ収集付き評価(100ステップ)
+python3 ishiki_Errorverifi.py -e ishiki-walking-rand -o obs_comparison_plots_rand 
+--genesis-file obs_data/genesis_ishiki-walking-rand_ckpt1000_simple.csv --choreonoid-file obs_data/cnoid_ishiki-walking-rand_ckpt1000_scale1.0.csv
+
+"""

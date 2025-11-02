@@ -87,57 +87,62 @@ def main():
 
     return env, policy, args
 
+def _read_torques(env):
+    """環境から実トルクをnp.ndarrayで取得"""
+    try:
+        if hasattr(env, "robot") and hasattr(env.robot, "get_dofs_force"):
+            if hasattr(env, "motors_dof_idx"):
+                t = env.robot.get_dofs_force(env.motors_dof_idx)
+            else:
+                t = env.robot.get_dofs_force()
+            return t.detach().cpu().numpy().astype(np.float32).ravel() if isinstance(t, torch.Tensor) \
+                   else np.asarray(t, dtype=np.float32).ravel()
+        elif hasattr(env, "dof_force") and env.dof_force is not None:
+            return env.dof_force[0].detach().cpu().numpy().astype(np.float32).ravel()
+    except Exception as e:
+        print(f"warn: torque read failed: {e}")
+    return np.zeros(env.env_cfg.get("num_actions", 12), dtype=np.float32)
+
 def eval_policy_with_data_collection(env, policy, args):
-    """データ収集付きの評価関数"""
-    # データ収集用のリスト
+    """reset直後のobsも含めて保存し、その後は各step後のobs/torqueを保存"""
     step_data = []
     obs_data = []
-    torque_data = []  # ← ここは常にリストのまま
+    torque_data = []
 
+    # reset直後を記録（step=0）
     obs, _ = env.reset()
     cnt = 0
+    step_data.append(cnt)
+    obs_data.append(obs.cpu().numpy().flatten())
+    torque_data.append(_read_torques(env))
+
     print(f"データ収集開始: {args.steps} ステップ")
-    
+
     with torch.no_grad():
         for i in range(args.steps):
-            # ポリシーから行動を取得
+            # 行動計算 → 環境を1ステップ進める
             actions = policy(obs)
-
-            # 1ステップ進める（トルクはこの後に読む方が一貫しやすい）
             obs, rews, dones, infos = env.step(actions)
 
-            # 実トルクの取得（優先: robot.get_dofs_force）
-            torques = None
-            try:
-                if hasattr(env, "robot") and hasattr(env.robot, "get_dofs_force"):
-                    if hasattr(env, "motors_dof_idx"):
-                        t = env.robot.get_dofs_force(env.motors_dof_idx)
-                    else:
-                        t = env.robot.get_dofs_force()
-                    torques = t.detach().cpu().numpy().ravel() if isinstance(t, torch.Tensor) else np.asarray(t, dtype=np.float32).ravel()
-                elif hasattr(env, "dof_force") and env.dof_force is not None:
-                    torques = env.dof_force[0].detach().cpu().numpy().ravel()
-            except Exception as e:
-                print(f"warn: torque read failed: {e}")
-
-            if torques is None:
-                torques = np.zeros(env.env_cfg.get("num_actions", 12), dtype=np.float32)
-
-            # 記録（obsはステップ後のもの）
+            # ステップ後のデータを記録
+            cnt += 1
             step_data.append(cnt)
             obs_data.append(obs.cpu().numpy().flatten())
-            torque_data.append(torques)
+            torque_data.append(_read_torques(env))
 
             if i % 20 == 0:
                 print(f"Step {i+1}/{args.steps}, Total steps: {cnt}")
-            cnt += 1
 
+            # 終了時はすぐresetし、reset直後のobsも記録して継続
             if dones.any():
-                print(f"Episode finished at step {cnt}, resetting...")
                 obs, _ = env.reset()
-    
-    print(f"データ収集完了: {len(step_data)} steps collected")
-    
+                cnt += 1
+                step_data.append(cnt)
+                obs_data.append(obs.cpu().numpy().flatten())
+                torque_data.append(_read_torques(env))
+
+    print(f"データ収集完了: {len(step_data)} rows")
+
     # CSVファイルに保存（トルク付き）
     df = save_simple_csv(step_data, obs_data, args.exp_name, args.ckpt, torque_data)
     return df
