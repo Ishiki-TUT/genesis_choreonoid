@@ -21,7 +21,7 @@ import genesis as gs
 
 from kawada_env_gs import KawadaBaseEnvGenesis as RL_Env
 
-def save_simple_csv(step_data, obs_data, exp_name, ckpt, torque_data=None):
+def save_simple_csv(step_data, obs_data, exp_name, ckpt, torque_data=None, scale=1.0):
     """CSVファイルにデータを保存する関数"""
     if not step_data:
         print("データがありません")
@@ -45,7 +45,7 @@ def save_simple_csv(step_data, obs_data, exp_name, ckpt, torque_data=None):
     
     # obs_dataディレクトリを作成
     os.makedirs('obs_data', exist_ok=True)
-    csv_filename = f'obs_data/genesis_{exp_name}_ckpt{ckpt}_simple.csv'
+    csv_filename = f'obs_data/genesis_{exp_name}_ckpt{ckpt}_scale{scale}.csv'
     df.to_csv(csv_filename, index=False)
     
     print(f"データを保存しました: {csv_filename}")
@@ -57,6 +57,7 @@ def main():
     parser.add_argument("-e", "--exp_name", type=str, default="kawada-walking")
     parser.add_argument("--ckpt", type=int, default=100)
     parser.add_argument("--steps", type=int, default=100, help="データ収集ステップ数")
+    parser.add_argument("--scale", type=int, default=1.0, help="データ収集アクションスケール")
     args = parser.parse_args()
 
     gs.init()
@@ -112,6 +113,7 @@ def eval_policy_with_data_collection(env, policy, args):
     # reset直後を記録（step=0）
     obs, _ = env.reset()
     cnt = 0
+
     step_data.append(cnt)
     obs_data.append(obs.cpu().numpy().flatten())
     torque_data.append(_read_torques(env))
@@ -122,6 +124,8 @@ def eval_policy_with_data_collection(env, policy, args):
         for i in range(args.steps):
             # 行動計算 → 環境を1ステップ進める
             actions = policy(obs)
+            #actions = actions * args.scale  # スケール調整
+            actions = actions * 0.0  # スケール調整
             obs, rews, dones, infos = env.step(actions)
 
             # ステップ後のデータを記録
@@ -144,7 +148,7 @@ def eval_policy_with_data_collection(env, policy, args):
     print(f"データ収集完了: {len(step_data)} rows")
 
     # CSVファイルに保存（トルク付き）
-    df = save_simple_csv(step_data, obs_data, args.exp_name, args.ckpt, torque_data)
+    df = save_simple_csv(step_data, obs_data, args.exp_name, args.ckpt, torque_data, args.scale)
     return df
 
 def eval_policy_continuous(env, policy):
@@ -153,6 +157,7 @@ def eval_policy_continuous(env, policy):
     with torch.no_grad():
         while True:
             actions = policy(obs)
+            actions = actions * args.scale  # スケール調整
             obs, rews, dones, infos = env.step(actions)
 
 if __name__ == "__main__":
@@ -167,8 +172,8 @@ if __name__ == "__main__":
 """
 # 使用例:
 # データ収集付き評価(100ステップ)
-python3 ishiki_eval_gs.py -e ishiki-walking-no-vel --ckpt 2000 --steps 100
+python3 ishiki_eval_gs.py -e ishiki-walking-no-vel --ckpt 2000 --steps 100 --scale 0.5
 
 # データ収集付き評価(500ステップ)
-python3 ishiki_eval_gs.py -e ishiki-walking-no-vel --ckpt 2000 --steps 500
+python3 ishiki_eval_gs.py -e ishiki-walking-no-vel --ckpt 2000 --steps 500 --scale 0.5
 """

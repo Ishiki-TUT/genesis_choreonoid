@@ -42,9 +42,9 @@ def load_data():
     """データ読み込み"""
     print("Loading data...")
     # genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
-    genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-rand_ckpt1000_simple.csv')
+    genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-rand_ckpt1000_scale0.csv')
     # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale1.0.csv')
-    cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-rand_ckpt1000_scale1.0.csv')
+    cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-rand_ckpt1000_scale0.0.csv')
 
     print(f"Genesis data shape: {genesis_df.shape}")
     print(f"Choreonoid data shape: {cnoid_df.shape}")
@@ -571,11 +571,11 @@ def main():
     parser = argparse.ArgumentParser(description="Genesis vs Choreonoid observation comparison")
     parser.add_argument("-o", "--output", type=str, default="obs_comparison_plots",
                         help="Output directory for plots (default: obs_comparison_plots)")
-    parser.add_argument("--genesis-file", type=str, 
+    parser.add_argument("-gene", "--genesis-file", type=str, 
                         default="obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv",
                         help="Genesis data file path")
-    parser.add_argument("--choreonoid-file", type=str,
-                        default="obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale0.25.csv", 
+    parser.add_argument("-cnoid", "--choreonoid-file", type=str,
+                        default="obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_simple.csv", 
                         help="Choreonoid data file path")
     args = parser.parse_args()
     
