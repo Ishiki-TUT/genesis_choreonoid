@@ -19,7 +19,8 @@ from rsl_rl.runners import OnPolicyRunner
 
 import genesis as gs
 
-from kawada_env_gs import KawadaBaseEnvGenesis as RL_Env
+#from kawada_env_gs import KawadaBaseEnvGenesis as RL_Env
+from ishiki_env_gs import KawadaBaseEnvGenesis as RL_Env
 
 def save_simple_csv(step_data, obs_data, exp_name, ckpt, torque_data=None, scale=1.0):
     """CSVファイルにデータを保存する関数"""
@@ -45,7 +46,7 @@ def save_simple_csv(step_data, obs_data, exp_name, ckpt, torque_data=None, scale
     
     # obs_dataディレクトリを作成
     os.makedirs('obs_data', exist_ok=True)
-    csv_filename = f'obs_data/genesis_{exp_name}_ckpt{ckpt}_scale{scale}.csv'
+    csv_filename = f'obs_data/genesis_{exp_name}_ckpt{ckpt}_scale{scale}_fixed_0.csv'
     df.to_csv(csv_filename, index=False)
     
     print(f"データを保存しました: {csv_filename}")
@@ -66,6 +67,8 @@ def main():
     env_cfg, obs_cfg, reward_cfg, command_cfg, train_cfg = pickle.load(open(f"logs/{args.exp_name}/cfgs.pkl", "rb"))
     reward_cfg["reward_scales"] = {}
 
+
+     #env_cfg["base_init_pos"] = [0.0, 0.0, 1.0] # 高さに変更 64
     ## override
     # env_cfg["episode_length_s"] = 40.0
     # command_cfg["lin_vel_x_range"] = [1.0, 1.0]

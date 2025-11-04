@@ -37,7 +37,7 @@ class RLEnvGenesis(RLEnvBase):
         )
 
         ### build environments geometries
-        self.build_environment()
+       #self.build_environment()
 
         # add robot
         self.robot = self.scene.add_entity(
@@ -45,6 +45,7 @@ class RLEnvGenesis(RLEnvBase):
                 file=robot_urdf_path,
                 pos=self.base_init_pos.cpu().numpy(),
                 quat=self.base_init_quat.cpu().numpy(),
+                fixed=True # ロボットを固定
             ),
         )
 

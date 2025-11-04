@@ -43,12 +43,12 @@ def main():
     # command_cfg["lin_vel_x_range"] = [1.0, 1.0]
     env_cfg["termination_if_roll_greater_than"] = 100.0
     env_cfg["termination_if_pitch_greater_than"] = 100.0
-    env_cfg["base_init_pos"] = [0.0, 0.0, 0.64]  # 高さに変更
+    env_cfg["base_init_pos"] = [0.0, 0.0, 0.66] # 高さに変更 64
 
     # 上書きする関節角（joint_names の順、単位: rad）
     default_joint_angle = [
         0.0, 0.0, -0.8, 1.6, -0.8, 0.0,   # R_HIP_Y, R_HIP_R, R_HIP_P, R_KNEE, R_ANKLE_P, R_ANKLE_R
-        0.0, 0.0, -0.8, 1.6, -0.8, 0.0,   # L_HIP_Y, L_HIP_R, L_HIP_P, L_KNEE, L_ANKLE_P, L_ANKLE_R
+        0.0, 0.0, -0.8, 1.6, -0.8, 00,   # L_HIP_Y, L_HIP_R, L_HIP_P, L_KNEE, L_ANKLE_P, L_ANKLE_R
     ]
     assert len(default_joint_angle) == len(env_cfg["joint_names"]), "サイズ不一致"
 
@@ -131,7 +131,7 @@ def eval_policy_collect_and_save(env, policy, steps=10, out_dir="standup_plots")
     control_hist = []
     external_hist = []
 
-    idx = getattr(env, "motors_dof_idx", None)
+    idx = getattr(env, "s_dof_idmotorx", None)
     with torch.no_grad():
         for i in range(steps):
             actions = policy(obs)
@@ -149,6 +149,8 @@ def eval_policy_collect_and_save(env, policy, steps=10, out_dir="standup_plots")
             external_hist.append(external_np)
 
             print("Step {}: control torques: {}, external forces: {}".format(cnt, control_np, external_np))
+            print("dofs_pos:",env.robot.get_dofs_position(idx))
+            print("taerget_pos:",env.target_dof_pos)
             input()  # 一時停止して確認
 
             if i % 20 == 0:
