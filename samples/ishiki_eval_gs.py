@@ -19,8 +19,8 @@ from rsl_rl.runners import OnPolicyRunner
 
 import genesis as gs
 
-#from kawada_env_gs import KawadaBaseEnvGenesis as RL_Env
-from ishiki_env_gs import KawadaBaseEnvGenesis as RL_Env
+from kawada_env_gs import KawadaBaseEnvGenesis as RL_Env
+# from ishiki_env_gs import KawadaBaseEnvGenesis as RL_Env
 
 def save_simple_csv(step_data, obs_data, exp_name, ckpt, torque_data=None, scale=1.0):
     """CSVファイルにデータを保存する関数"""
@@ -68,7 +68,7 @@ def main():
     reward_cfg["reward_scales"] = {}
 
 
-     #env_cfg["base_init_pos"] = [0.0, 0.0, 1.0] # 高さに変更 64
+    # env_cfg["base_init_pos"] = [0.0, 0.0, 1.0] # 高さに変更 64
     ## override
     # env_cfg["episode_length_s"] = 40.0
     # command_cfg["lin_vel_x_range"] = [1.0, 1.0]
@@ -154,7 +154,7 @@ def eval_policy_with_data_collection(env, policy, args):
     df = save_simple_csv(step_data, obs_data, args.exp_name, args.ckpt, torque_data, args.scale)
     return df
 
-def eval_policy_continuous(env, policy):
+def eval_policy_continuous(env, policy, args):
     """連続評価（データ収集なし）"""
     obs, _ = env.reset()
     with torch.no_grad():
@@ -167,10 +167,10 @@ if __name__ == "__main__":
     env, policy, args = main()
     
     # データ収集付き評価を実行
-    df = eval_policy_with_data_collection(env, policy, args)
+    # df = eval_policy_with_data_collection(env, policy, args)
     
     # 必要に応じて連続評価も実行
-    # eval_policy_continuous(env, policy)
+    eval_policy_continuous(env, policy, args)
 
 """
 # 使用例:

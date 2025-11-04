@@ -43,7 +43,7 @@ def main():
     # command_cfg["lin_vel_x_range"] = [1.0, 1.0]
     env_cfg["termination_if_roll_greater_than"] = 100.0
     env_cfg["termination_if_pitch_greater_than"] = 100.0
-    env_cfg["base_init_pos"] = [0.0, 0.0, 0.66] # 高さに変更 64
+    env_cfg["base_init_pos"] = [0.0, 0.0, 0.64] # 高さに変更 64
 
     # 上書きする関節角（joint_names の順、単位: rad）
     default_joint_angle = [
@@ -170,5 +170,5 @@ if __name__ == "__main__":
 
 """
 # evaluation
-python ishiki_eval_standup.py -e kawada-walking -v --ckpt 1000
+python ishiki_eval_standup.py -e kawada-walking -v --ckpt 1000 --steps 100
 """

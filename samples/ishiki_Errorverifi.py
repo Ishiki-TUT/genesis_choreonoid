@@ -42,9 +42,9 @@ def load_data():
     """データ読み込み"""
     print("Loading data...")
     # genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
-    genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-rand_ckpt1000_scale1.0_fixed.csv')
+    genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-rand_ckpt1000_scale0_fixed.csv')
     # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale1.0.csv')
-    cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-rand_ckpt1000_scale1.0_fixed.csv')
+    cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-rand_ckpt1000_scale0.0_fixed.csv')
 
     print(f"Genesis data shape: {genesis_df.shape}")
     print(f"Choreonoid data shape: {cnoid_df.shape}")
@@ -642,7 +642,7 @@ if __name__ == "__main__":  main()
 """
 # 使用例:
 # データ収集付き評価(100ステップ)
-python3 ishiki_Errorverifi.py -e ishiki-walking-rand -o obs_comparison_plots_rand 
+python3 ishiki_Errorverifi.py -o obs_comparison_plots_rand 
 --genesis-file obs_data/genesis_ishiki-walking-rand_ckpt1000_simple.csv --choreonoid-file obs_data/cnoid_ishiki-walking-rand_ckpt1000_scale1.0.csv
 
 """
