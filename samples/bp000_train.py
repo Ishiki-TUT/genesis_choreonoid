@@ -134,6 +134,8 @@ def get_cfgs():
         "dt": 0.01,
         "substeps": 10,
         "rotorInertia": 0.1,
+        # noise settings
+
     }
     obs_cfg = {
         "num_obs": 45,  # 3 + 3 + 3 + 12 + 12 + 12
@@ -183,6 +185,10 @@ def main():
 
     args = parser.parse_args()
 
+    ## set robot path fix collisiton 
+    ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))  # /userdir
+    robot_path = os.path.join(ROOT, "userdir", "humanoid_research_k", "robots", "kawada_base.simple_collision.urdf")
+
     gs.init(logging_level="warning")
 
     log_dir = f"logs/{args.exp_name}"
@@ -215,6 +221,7 @@ def main():
         dt=env_cfg['dt'],
         substeps=env_cfg['substeps'],
         show_viewer=args.view,
+        robot_urdf_path=robot_path,
     )
 
     runner = OnPolicyRunner(env, train_cfg, log_dir, device=gs.device)
