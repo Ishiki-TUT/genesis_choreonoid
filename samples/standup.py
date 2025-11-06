@@ -36,7 +36,7 @@ scene.add_entity(gs.morphs.URDF(file="urdf/plane/plane.urdf", fixed=True))
 #     gs.morphs.URDF(file="urdf/plane/plane.urdf", fixed=True),
 # )
 
-robot_urdf_path = "bp000.urdf"
+robot_urdf_path = "kawada_base.simple_collision.urdf"
 
 robot = scene.add_entity(
     gs.morphs.URDF(
@@ -80,7 +80,7 @@ robot.set_dofs_force_range([-30000.0]*12, [30000.0]*12, motors_dof_idx)
 robot.set_dofs_position(q_init, motors_dof_idx)
 robot.set_dofs_velocity(np.zeros(12, dtype=np.float32), motors_dof_idx)
 # ルートの速度もゼロ（APIがあれば）
-# robot.set_root_velocity(lin=(0,0,0), ang=(0,0,0))
+robot.set_root_velocity(lin=(0,0,0), ang=(0,0,0))
 
 
 # 3) 毎ステップはteleport(set_)ではなくPD制御（control_）で目標を保持
