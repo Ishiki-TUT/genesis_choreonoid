@@ -116,10 +116,10 @@ def get_cfgs():
             "L_ANKLE_R",
         ],
         # PD
-        # "kp": 2000.0,
-        # "kd": 500.0,
-        "kp": 2500.0,
-        "kd": 700.0,
+        "kp": 2000.0,
+        "kd": 500.0,
+        # "kp": 2500.0,
+        # "kd": 700.0,
         # termination
         "termination_if_roll_greater_than": 10,  # degree
         "termination_if_pitch_greater_than": 10,
@@ -135,7 +135,8 @@ def get_cfgs():
         "substeps": 10,
         "rotorInertia": 0.1,
         # noise settings
-
+        "base_roll_noise": [-0.0087, 0.0087],  # rad
+        "base_pitch_noise": [-0.0087, 0.0087],  # rad
     }
     obs_cfg = {
         "num_obs": 45,  # 3 + 3 + 3 + 12 + 12 + 12

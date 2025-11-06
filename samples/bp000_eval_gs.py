@@ -30,7 +30,7 @@ def main():
 
     ## override
     env_cfg["episode_length_s"] = 40.0
-    command_cfg["lin_vel_x_range"] = [1.0, 1.0]
+    command_cfg["lin_vel_x_range"] = [0.5, 0.5]
 
     env = RLEnv(
         num_envs=1,
@@ -64,5 +64,5 @@ if __name__ == "__main__":
 
 """
 # evaluation
-python examples/locomotion/bp000_eval.py -e bp000-walking -v --ckpt 100
+python examples/locomotion/bp000_eval.py -e bp000-walking --ckpt 100
 """
