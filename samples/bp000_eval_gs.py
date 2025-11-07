@@ -31,6 +31,8 @@ def main():
     ## override
     env_cfg["episode_length_s"] = 40.0
     command_cfg["lin_vel_x_range"] = [0.5, 0.5]
+    env_cfg['base_roll_noise'] = [0,0]
+    env_cfg['base_pitch_noise'] = [0,0]
 
     env = RLEnv(
         num_envs=1,
@@ -52,12 +54,19 @@ def main():
     return env, policy
 
 def eval_policy(env, policy):
-    obs, rews, dones, infos = env.step(env.actions)
+    obs, _ = env.reset()
+    cnt = 0
+    
+    print("env_reset:", obs["policy"])
     with torch.no_grad():
         while True:
             actions = policy(obs)
             obs, rews, dones, infos = env.step(actions)
+            print(obs["policy"])
+            print(f"Step: {cnt}")
+            input()
 
+            cnt += 1
 if __name__ == "__main__":
     env, policy = main()
     eval_policy(env, policy)
