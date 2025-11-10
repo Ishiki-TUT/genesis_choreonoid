@@ -1,0 +1,107 @@
+root@irsl-Z790-Pro-RS:/userdir/samples# python3 bp000_eval_gs.py -e collision-walking-rand --ckpt 200 --action_scale 0
+Version of rsl-rl-lib : 3.1.1
+[Genesis] [10:46:18] [INFO] ╭───────────────────────────────────────────────────────────────────────────────────╮
+[Genesis] [10:46:18] [INFO] │┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈ Genesis ┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈┉┈│
+[Genesis] [10:46:18] [INFO] ╰───────────────────────────────────────────────────────────────────────────────────╯
+[Genesis] [10:46:18] [INFO] Running on [NVIDIA GeForce RTX 4070 Ti] with backend gs.cuda. Device memory: 11.60 GB.
+[Genesis] [10:46:18] [INFO] 🚀 Genesis initialized. 🔖 version: 0.3.6, 🎨 theme: dark, 🌱 seed: None, 🐛 debug: False, 📏 precision: 32, 🏎️ performance: False, 💬 verbose: INFO
+[Genesis] [10:46:19] [INFO] Scene <d51c06f> created.
+[Genesis] [10:46:19] [INFO] Adding <gs.RigidEntity>. idx: 0, uid: <a615d7a>, morph: <gs.morphs.URDF(file='/usr/local/lib/python3.10/dist-packages/genesis/assets/urdf/plane/plane.urdf')>, material: <gs.materials.Rigid>.
+[Genesis] [10:46:20] [INFO] Applying offset to base link's pose with user provided value in morph.
+[Genesis] [10:46:20] [INFO] Adding <gs.RigidEntity>. idx: 1, uid: <eb8826e>, morph: <gs.morphs.URDF(file='/userdir/userdir/humanoid_research_k/robots/kawada_base.simple_collision.urdf')>, material: <gs.materials.Rigid>.
+[Genesis] [10:46:20] [INFO] Applying offset to base link's pose with user provided value in morph.
+[Genesis] [10:46:20] [INFO] Building scene <d51c06f>...
+[Genesis] [10:46:21] [INFO] Compiling simulation kernels...
+[Genesis] [10:46:24] [INFO] Building visualizer...
+[Genesis] [10:46:25] [INFO] Viewer created. Resolution: 1440×1080, max_FPS: 100.
+--------------------------------------------------------------------------------
+Resolved observation sets: 
+         policy :  ['policy']
+         critic :  ['policy']
+--------------------------------------------------------------------------------
+Actor MLP: MLP(
+  (0): Linear(in_features=45, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=12, bias=True)
+)
+Critic MLP: MLP(
+  (0): Linear(in_features=45, out_features=512, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=512, out_features=256, bias=True)
+  (3): ELU(alpha=1.0)
+  (4): Linear(in_features=256, out_features=128, bias=True)
+  (5): ELU(alpha=1.0)
+  (6): Linear(in_features=128, out_features=1, bias=True)
+)
+env_reset: tensor([[0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+         0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]],
+       device='cuda:0')
+/usr/local/lib/python3.10/dist-packages/torch/utils/_device.py:104: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  return func(*args, **kwargs)
+tensor([[ 2.6128e-10, -1.0133e-09,  1.0485e-10,  0.0000e+00,  0.0000e+00,
+         -1.0000e+00,  1.0000e+00,  0.0000e+00,  0.0000e+00, -9.2732e-13,
+          1.7594e-11,  0.0000e+00,  0.0000e+00,  0.0000e+00, -1.8104e-12,
+         -1.1361e-13, -8.8160e-12,  0.0000e+00,  0.0000e+00,  0.0000e+00,
+          1.6234e-12, -1.2227e-12,  1.1254e-10,  2.5409e-11,  1.1721e-10,
+          7.3972e-13, -8.6217e-12, -7.3428e-13, -6.0463e-11,  2.6742e-11,
+          5.4029e-11,  2.2581e-12,  7.7495e-12, -0.0000e+00,  0.0000e+00,
+          0.0000e+00, -0.0000e+00, -0.0000e+00, -0.0000e+00,  0.0000e+00,
+          0.0000e+00,  0.0000e+00, -0.0000e+00, -0.0000e+00,  0.0000e+00]],
+       device='cuda:0')
+Step: 0
+
+[Genesis] [10:46:33] [INFO] Running at 0.13 FPS (0.13 FPS per env, 1 envs).
+tensor([[-3.8043e-06, -1.4760e-02,  2.3484e-05, -4.7789e-04,  1.7218e-07,
+         -1.0000e+00,  1.0000e+00,  0.0000e+00,  0.0000e+00, -3.3355e-07,
+         -2.3470e-07, -1.3530e-04,  1.4595e-03, -6.0487e-04,  5.8497e-07,
+          1.5477e-07,  3.8520e-07, -1.3435e-04,  1.4595e-03, -6.0552e-04,
+         -1.4662e-07, -6.1609e-06, -6.1806e-06, -2.8258e-04,  7.4599e-03,
+         -2.7774e-03,  3.3993e-06,  4.1447e-06,  5.7788e-06, -2.7173e-04,
+          7.4592e-03, -2.7856e-03, -2.1775e-06, -0.0000e+00, -0.0000e+00,
+          0.0000e+00, -0.0000e+00, -0.0000e+00, -0.0000e+00,  0.0000e+00,
+          0.0000e+00,  0.0000e+00, -0.0000e+00, -0.0000e+00, -0.0000e+00]],
+       device='cuda:0')
+Step: 1
+
+[Genesis] [10:46:34] [INFO] Running at 0.13 FPS (0.13 FPS per env, 1 envs).
+tensor([[-2.3509e-05, -1.2195e-02, -1.6606e-05, -1.0045e-03,  4.4135e-07,
+         -1.0000e+00,  1.0000e+00,  0.0000e+00,  0.0000e+00, -9.5053e-07,
+         -8.8473e-07, -1.7369e-04,  2.6520e-03, -1.0526e-03,  8.8031e-07,
+          1.0097e-06,  2.2894e-06, -1.7023e-04,  2.6504e-03, -1.0478e-03,
+         -4.1422e-07, -1.2793e-06, -1.0863e-06, -1.8063e-04,  5.0238e-03,
+         -1.9127e-03,  1.7221e-06,  4.8978e-06,  1.0429e-05, -1.6827e-04,
+          5.0106e-03, -1.8857e-03, -3.6233e-07, -0.0000e+00, -0.0000e+00,
+          0.0000e+00, -0.0000e+00, -0.0000e+00, -0.0000e+00,  0.0000e+00,
+          0.0000e+00,  0.0000e+00, -0.0000e+00, -0.0000e+00, -0.0000e+00]],
+       device='cuda:0')
+Step: 2
+
+[Genesis] [10:46:35] [INFO] Running at 0.14 FPS (0.14 FPS per env, 1 envs).
+tensor([[-2.1812e-06, -1.2017e-02,  1.8043e-06, -1.4809e-03,  7.6677e-07,
+         -1.0000e+00,  1.0000e+00,  0.0000e+00,  0.0000e+00, -1.6233e-06,
+         -2.0692e-06, -2.0850e-04,  3.5548e-03, -1.3918e-03,  1.2157e-06,
+          1.8022e-06,  3.6699e-06, -2.0546e-04,  3.5530e-03, -1.3875e-03,
+         -6.7266e-07, -2.5633e-06, -7.1180e-06, -1.6928e-04,  4.2604e-03,
+         -1.5791e-03,  2.3354e-06,  2.2630e-06,  3.9822e-06, -1.7771e-04,
+          4.2655e-03, -1.5856e-03, -8.7999e-07, -0.0000e+00, -0.0000e+00,
+          0.0000e+00, -0.0000e+00, -0.0000e+00, -0.0000e+00,  0.0000e+00,
+          0.0000e+00,  0.0000e+00, -0.0000e+00, -0.0000e+00, -0.0000e+00]],
+       device='cuda:0')
+Step: 3
+
+[Genesis] [10:46:46] [INFO] Running at 0.13 FPS (0.13 FPS per env, 1 envs).
+tensor([[ 1.8220e-06, -1.2870e-02, -2.0497e-06, -1.9775e-03,  7.1813e-07,
+         -1.0000e+00,  1.0000e+00,  0.0000e+00,  0.0000e+00, -2.0157e-06,
+         -3.3882e-06, -2.4009e-04,  4.3854e-03, -1.6902e-03,  1.5641e-06,
+          2.2752e-06,  4.4179e-06, -2.3854e-04,  4.3845e-03, -1.6871e-03,
+         -1.0239e-06, -1.8972e-06, -5.7000e-06, -1.4702e-04,  4.1001e-03,
+         -1.4281e-03,  1.2623e-06,  1.8336e-06,  2.7607e-06, -1.5337e-04,
+          4.1045e-03, -1.4341e-03, -2.0281e-06, -0.0000e+00, -0.0000e+00,
+          0.0000e+00, -0.0000e+00, -0.0000e+00, -0.0000e+00,  0.0000e+00,
+          0.0000e+00,  0.0000e+00, -0.0000e+00, -0.0000e+00, -0.0000e+00]],
+       device='cuda:0')
+Step: 4

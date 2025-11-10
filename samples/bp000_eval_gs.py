@@ -16,6 +16,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--exp_name", type=str, default="bp000-walking")
     parser.add_argument("--ckpt", type=int, default=100)
+    parser.add_argument("--action_scale", type=float, default=1.0)
     args = parser.parse_args()
 
     ## set robot path fix collisiton 
@@ -27,6 +28,9 @@ def main():
     log_dir = f"logs/{args.exp_name}"
     env_cfg, obs_cfg, reward_cfg, command_cfg, train_cfg = pickle.load(open(f"logs/{args.exp_name}/cfgs.pkl", "rb"))
     reward_cfg["reward_scales"] = {}
+
+    global action_scale
+    action_scale = args.action_scale
 
     ## override
     env_cfg["episode_length_s"] = 40.0
@@ -55,13 +59,15 @@ def main():
 
 def eval_policy(env, policy):
     obs, _ = env.reset()
-    cnt = 0
     
+    cnt = 0
+
     print("env_reset:", obs["policy"])
     with torch.no_grad():
         while True:
             actions = policy(obs)
-            obs, rews, dones, infos = env.step(actions)
+            scaled_actions = actions * action_scale
+            obs, rews, dones, infos = env.step(scaled_actions)
             print(obs["policy"])
             print(f"Step: {cnt}")
             input()
