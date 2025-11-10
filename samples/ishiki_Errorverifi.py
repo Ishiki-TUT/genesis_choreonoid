@@ -42,9 +42,9 @@ def load_data():
     """データ読み込み"""
     print("Loading data...")
     # genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
-    genesis_df = pd.read_csv('obs_data/genesis_collision-walking-rand_ckpt200_scale1.0.csv')
+    genesis_df = pd.read_csv('obs_data/genesis_collision-walking-rand_ckpt200_scale0.0.csv')
     # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale1.0.csv')
-    cnoid_df = pd.read_csv('obs_data/cnoid_collision-walking-rand_ckpt200_scale1.0.csv')
+    cnoid_df = pd.read_csv('obs_data/cnoid_collision-walking-rand_ckpt200_scale0.0.csv')
 
     print(f"Genesis data shape: {genesis_df.shape}")
     print(f"Choreonoid data shape: {cnoid_df.shape}")
@@ -64,8 +64,8 @@ def extract_obs_components(genesis_df, cnoid_df):
     - torque_0~11: torques (12)  ← あれば読む
     """
     # 共通のステップ数を確認
-    min_steps = 20
-    #min_steps = min(len(genesis_df), len(cnoid_df))
+    # min_steps = 20
+    min_steps = min(len(genesis_df), len(cnoid_df))
     print(f"Analyzing {min_steps} steps")
     
     # Base angular velocity (obs_0~2)

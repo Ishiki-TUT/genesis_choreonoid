@@ -183,8 +183,8 @@ if __name__ == "__main__":
 """
 # 使用例:
 # データ収集付き評価(100ステップ)
-python3 ishiki_eval_gs.py -e ishiki-walking-no-vel --ckpt 2000 --steps 100 --scale 0.5
+python3 ishiki_eval_gs.py -e ishiki-walking-no-vel --ckpt 2000 --steps 100 --action_scale 0.5
 
 # データ収集付き評価(500ステップ)
-python3 ishiki_eval_gs.py -e ishiki-walking-no-vel --ckpt 2000 --steps 500 --scale 0.5
+python3 ishiki_eval_gs.py -e ishiki-walking-no-vel --ckpt 2000 --steps 500 --action_scale 0.5
 """
