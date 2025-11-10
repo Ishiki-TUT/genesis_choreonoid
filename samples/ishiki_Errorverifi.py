@@ -64,8 +64,8 @@ def extract_obs_components(genesis_df, cnoid_df):
     - torque_0~11: torques (12)  ← あれば読む
     """
     # 共通のステップ数を確認
-    # min_steps = 20
-    min_steps = min(len(genesis_df), len(cnoid_df))
+    min_steps = 20
+    #min_steps = min(len(genesis_df), len(cnoid_df))
     print(f"Analyzing {min_steps} steps")
     
     # Base angular velocity (obs_0~2)
