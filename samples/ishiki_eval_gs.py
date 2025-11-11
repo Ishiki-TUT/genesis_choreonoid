@@ -39,7 +39,7 @@ def save_simple_csv(step_data, obs_data, exp_name, ckpt, torque_data=None, actio
     
     # obs_dataディレクトリを作成
     os.makedirs('obs_data', exist_ok=True)
-    csv_filename = f'obs_data/genesis_{exp_name}_ckpt{ckpt}_scale{action_scale}.csv'
+    csv_filename = f'obs_data/genesis_{exp_name}_ckpt{ckpt}_scale{action_scale}_fixed.csv'
     df.to_csv(csv_filename, index=False)
     
     print(f"データを保存しました: {csv_filename}")
@@ -65,10 +65,11 @@ def main():
     reward_cfg["reward_scales"] = {}
 
     ## override
-    env_cfg["episode_length_s"] = 40.0
+    env_cfg["episode_length_s"] = 20.0
     command_cfg["lin_vel_x_range"] = [0.5, 0.5]
     env_cfg['base_roll_noise'] = [0,0]
     env_cfg['base_pitch_noise'] = [0,0]
+    # env_cfg['kd'] = 10
 
     env = RLEnv(
         num_envs=1,
@@ -175,10 +176,10 @@ if __name__ == "__main__":
     env, policy, args = main()
     
     # データ収集付き評価を実行
-    # df = eval_policy_with_data_collection(env, policy, args)
+    df = eval_policy_with_data_collection(env, policy, args)
     
     # 必要に応じて連続評価も実行
-    eval_policy_continuous(env, policy, args)
+    # eval_policy_continuous(env, policy, args)
 
 """
 # 使用例:

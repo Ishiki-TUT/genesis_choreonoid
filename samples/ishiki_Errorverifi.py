@@ -42,9 +42,9 @@ def load_data():
     """データ読み込み"""
     print("Loading data...")
     # genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
-    genesis_df = pd.read_csv('obs_data/genesis_collision-walking-rand_ckpt200_scale0.0.csv')
+    genesis_df = pd.read_csv('obs_data/genesis_collision-walking-rand_ckpt200_scale1.0_fixed.csv')
     # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale1.0.csv')
-    cnoid_df = pd.read_csv('obs_data/cnoid_collision-walking-rand_ckpt200_scale0.0.csv')
+    cnoid_df = pd.read_csv('obs_data/cnoid_collision-walking-rand_ckpt200_scale1.0_fixed.csv')
 
     print(f"Genesis data shape: {genesis_df.shape}")
     print(f"Choreonoid data shape: {cnoid_df.shape}")
@@ -64,8 +64,8 @@ def extract_obs_components(genesis_df, cnoid_df):
     - torque_0~11: torques (12)  ← あれば読む
     """
     # 共通のステップ数を確認
-    # min_steps = 20
-    min_steps = min(len(genesis_df), len(cnoid_df))
+    min_steps = 20
+    # min_steps = min(len(genesis_df), len(cnoid_df))
     print(f"Analyzing {min_steps} steps")
     
     # Base angular velocity (obs_0~2)
@@ -84,25 +84,29 @@ def extract_obs_components(genesis_df, cnoid_df):
     genesis_actions = np.array([genesis_df[f'obs_{33+i}'].iloc[:min_steps] for i in range(12)]).T
     cnoid_actions = np.array([cnoid_df[f'obs_{33+i}'].iloc[:min_steps] for i in range(12)]).T
 
-    # Torques (torque_0~11) — 存在チェックして読込
-    torque_cols = [f"torque_{i}" for i in range(12)]
-    has_g_torque = all((c in genesis_df.columns) for c in torque_cols)
-    has_c_torque = all((c in cnoid_df.columns) for c in torque_cols)
-    if has_g_torque and has_c_torque:
-        # 数値化してNaNを補間→0埋め
-        for col in torque_cols:
-            genesis_df[col] = pd.to_numeric(genesis_df[col], errors="coerce")
-            cnoid_df[col]   = pd.to_numeric(cnoid_df[col],   errors="coerce")
-        genesis_df[torque_cols] = genesis_df[torque_cols].fillna(method="ffill").fillna(0.0)
-        cnoid_df[torque_cols]   = cnoid_df[torque_cols].fillna(method="ffill").fillna(0.0)
+    # Torques (torque_0~11)
+    genesis_torque = np.array([genesis_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
+    cnoid_torque = np.array([cnoid_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
 
-        min_steps = min(len(genesis_df), len(cnoid_df))
-        genesis_torque = np.array([genesis_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
-        cnoid_torque   = np.array([cnoid_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
-    else:
-        genesis_torque = None
-        cnoid_torque = None
-        print("Info: torque_0..11 columns not found in one or both CSVs. Skipping torque plots.")
+    # # Torques (torque_0~11) — 存在チェックして読込
+    # torque_cols = [f"torque_{i}" for i in range(12)]
+    # has_g_torque = all((c in genesis_df.columns) for c in torque_cols)
+    # has_c_torque = all((c in cnoid_df.columns) for c in torque_cols)
+    # if has_g_torque and has_c_torque:
+    #     # 数値化してNaNを補間→0埋め
+    #     for col in torque_cols:
+    #         genesis_df[col] = pd.to_numeric(genesis_df[col], errors="coerce")
+    #         cnoid_df[col]   = pd.to_numeric(cnoid_df[col],   errors="coerce")
+    #     genesis_df[torque_cols] = genesis_df[torque_cols].fillna(method="ffill").fillna(0.0)
+    #     cnoid_df[torque_cols]   = cnoid_df[torque_cols].fillna(method="ffill").fillna(0.0)
+
+    #     min_steps = min(len(genesis_df), len(cnoid_df))
+    #     genesis_torque = np.array([genesis_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
+    #     cnoid_torque   = np.array([cnoid_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
+    # else:
+    #     genesis_torque = None
+    #     cnoid_torque = None
+    #     print("Info: torque_0..11 columns not found in one or both CSVs. Skipping torque plots.")
 
     return {
         'genesis_ang_vel': genesis_ang_vel,

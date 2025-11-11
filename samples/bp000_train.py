@@ -117,7 +117,7 @@ def get_cfgs():
         ],
         # PD
         "kp": 2000.0,
-        "kd": 500.0,
+        "kd": 150.0, # 500.0
         # "kp": 2500.0,
         # "kd": 700.0,
         # termination
@@ -135,8 +135,8 @@ def get_cfgs():
         "substeps": 10,
         "rotorInertia": 0.1,
         # noise settings
-        "base_roll_noise": [-0.0087, 0.0087],  # rad
-        "base_pitch_noise": [-0.0087, 0.0087],  # rad
+        "base_roll_noise": [-0.0087, 0.0087],  # rad 0.5 deg
+        "base_pitch_noise": [-0.0087, 0.0087],  # rad 0.5 deg
     }
     obs_cfg = {
         "num_obs": 45,  # 3 + 3 + 3 + 12 + 12 + 12
