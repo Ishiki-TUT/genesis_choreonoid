@@ -69,7 +69,8 @@ def main():
     command_cfg["lin_vel_x_range"] = [0.5, 0.5]
     env_cfg['base_roll_noise'] = [0,0]
     env_cfg['base_pitch_noise'] = [0,0]
-    # env_cfg['kd'] = 10
+    # env_cfg['kp'] = 10000.0
+    # env_cfg['kd'] = 50.0
 
     env = RLEnv(
         num_envs=1,

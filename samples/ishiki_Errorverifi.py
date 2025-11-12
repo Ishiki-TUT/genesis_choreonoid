@@ -42,9 +42,9 @@ def load_data():
     """データ読み込み"""
     print("Loading data...")
     # genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
-    genesis_df = pd.read_csv('obs_data/genesis_collision-walking-rand_ckpt200_scale1.0_fixed.csv')
+    genesis_df = pd.read_csv('obs_data/genesis_collision-walking-rand-kp20000-kd50_ckpt10000_scale1.0.csv')
     # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale1.0.csv')
-    cnoid_df = pd.read_csv('obs_data/cnoid_collision-walking-rand_ckpt200_scale1.0_fixed.csv')
+    # cnoid_df = pd.read_csv('obs_data/cnoid_collision-walking-rand_ckpt200_scale1.0_fixed.csv')
 
     print(f"Genesis data shape: {genesis_df.shape}")
     print(f"Choreonoid data shape: {cnoid_df.shape}")
