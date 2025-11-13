@@ -137,6 +137,14 @@ def get_cfgs():
         # noise settings
         "base_roll_noise": [-0.0087, 0.0087],  # rad 0.5 deg
         "base_pitch_noise": [-0.0087, 0.0087],  # rad 0.5 deg
+
+        # domain randomization
+        "domain_rand": {
+            "friction": [0.5, 1.0],         # 地面摩擦係数範囲
+            "restitution": [0.0, 0.5],      # 地面反発係数範囲
+            "kp": [15000.0, 25000.0],       # Pゲイン範囲
+            "kd": [40.0, 80.0],             # Dゲイン範囲
+        },
     }
     obs_cfg = {
         "num_obs": 45,  # 3 + 3 + 3 + 12 + 12 + 12

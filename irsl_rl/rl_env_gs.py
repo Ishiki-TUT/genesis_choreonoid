@@ -12,8 +12,8 @@ class RLEnvGenesis(RLEnvBase):
         super().__init__(num_envs, env_cfg, obs_cfg, reward_cfg, command_cfg, show_viewer, device, dt, substeps, robot_urdf_path)
 
     def build_environment(self):
-        # add plain
-        self.scene.add_entity(gs.morphs.URDF(file="urdf/plane/plane.urdf", fixed=True))
+        # add plane
+        self.plane = self.scene.add_entity(gs.morphs.URDF(file="urdf/plane/plane.urdf", fixed=True))
 
     def scene_build(self, substeps, robot_urdf_path, show_viewer):
         # create scene
@@ -62,6 +62,38 @@ class RLEnvGenesis(RLEnvBase):
         #if max_effort is not None:
         #    self.robot.set_dofs_force_range([-max_effort]*self.num_actions, [max_effort]*self.num_actions, self.motors_dof_idx)
 
+    def randomize_domain_parameters(self, envs_idx):
+        """摩擦・反発係数・PDゲインをランダマイズ"""
+        if "domain_rand" not in self.env_cfg:
+            return
+
+        dr = self.env_cfg["domain_rand"]
+
+        # --- 地面パラメータ ---
+        fr_low, fr_high = dr["friction"]
+        res_low, res_high = dr["restitution"]
+
+        rand_friction = (fr_high - fr_low) * torch.rand(len(envs_idx), device=self.device) + fr_low
+        rand_restitution = (res_high - res_low) * torch.rand(len(envs_idx), device=self.device) + res_low
+
+        try:
+            self.plane.set_friction(rand_friction.cpu().numpy(), envs_idx)
+            self.plane.set_restitution(rand_restitution.cpu().numpy(), envs_idx)
+        except Exception as e:
+            print(f"[DomainRand] Warning: ground friction/restitution not set: {e}")
+
+        # --- PDゲイン ---
+        kp_low, kp_high = dr["kp"]
+        kd_low, kd_high = dr["kd"]
+
+        rand_kp = (kp_high - kp_low) * torch.rand(len(envs_idx), device=self.device) + kp_low
+        rand_kd = (kd_high - kd_low) * torch.rand(len(envs_idx), device=self.device) + kd_low
+
+        kp_tensor = rand_kp.repeat_interleave(len(self.motors_dof_idx))
+        kd_tensor = rand_kd.repeat_interleave(len(self.motors_dof_idx))
+
+        self.robot.set_dofs_kp(kp_tensor.cpu().numpy(), self.motors_dof_idx, envs_idx)
+        self.robot.set_dofs_kv(kd_tensor.cpu().numpy(), self.motors_dof_idx, envs_idx)
 
     def env_step(self): ## override
         self.robot.control_dofs_position(self.target_dof_pos, self.motors_dof_idx)
@@ -102,3 +134,7 @@ class RLEnvGenesis(RLEnvBase):
         self.robot.set_quat(self.use_base_quat[envs_idx], zero_velocity=False, envs_idx=envs_idx)
 
         self.robot.zero_all_dofs_velocity(envs_idx)
+
+        # --- Domain Randomization の適用 ---
+        if hasattr(self, "randomize_domain_parameters"):
+            self.randomize_domain_parameters(envs_idx)
