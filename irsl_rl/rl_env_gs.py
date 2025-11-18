@@ -66,34 +66,59 @@ class RLEnvGenesis(RLEnvBase):
         """摩擦・反発係数・PDゲインをランダマイズ"""
         if "domain_rand" not in self.env_cfg:
             return
-
         dr = self.env_cfg["domain_rand"]
 
         # --- 地面パラメータ ---
         fr_low, fr_high = dr["friction"]
-        res_low, res_high = dr["restitution"]
 
+        # envs_idx ごとの乱数
+        envs_idx = torch.as_tensor(envs_idx, device=self.device, dtype=torch.long)
         rand_friction = (fr_high - fr_low) * torch.rand(len(envs_idx), device=self.device) + fr_low
-        rand_restitution = (res_high - res_low) * torch.rand(len(envs_idx), device=self.device) + res_low
 
         try:
-            self.plane.set_friction(rand_friction.cpu().numpy(), envs_idx)
-            self.plane.set_restitution(rand_restitution.cpu().numpy(), envs_idx)
+            # 履歴を保持（任意）
+            friction_all = getattr(self, "_friction_all",
+                                   torch.ones(self.num_envs, device=self.device)).clone()
+            friction_all[envs_idx] = rand_friction
+            self._friction_all = friction_all
+
+            # 正しい呼び方: envs_idx をキーワードで、1D 配列を渡す
+            self.plane.set_friction(rand_friction.detach().cpu().numpy(), envs_idx=envs_idx.detach().cpu().numpy())
+            # デバッグ
+            # print("friction set @envs", envs_idx.tolist(), "=", rand_friction.tolist())
+        except TypeError as e:
+            # 古い API 向けフォールバック（env ごとにスカラーで設定）
+            try:
+                idx_list = envs_idx.detach().cpu().tolist()
+                vals = rand_friction.detach().cpu().tolist()
+                for i, v in zip(idx_list, vals):
+                    self.plane.set_friction(float(v), envs_idx=[i])
+            except Exception as e2:
+                print(f"[DomainRand] Warning: ground friction not set (fallback failed): {e2}")
         except Exception as e:
-            print(f"[DomainRand] Warning: ground friction/restitution not set: {e}")
+            print(f"[DomainRand] Warning: ground friction not set: {e}")
 
-        # --- PDゲイン ---
-        kp_low, kp_high = dr["kp"]
-        kd_low, kd_high = dr["kd"]
+        # restitution も同様に envs_idx を渡さず全envのベクトルで設定してください
+        # 例:
+        # rest_all = getattr(self, "_rest_all", 0.0 * torch.ones(self.num_envs, device=self.device)).clone()
+        # rest_all[envs_idx] = rand_restitution
+        # self._rest_all = rest_all
+        # self.plane.set_restitution(rest_all.detach().cpu().numpy())
+        # except Exception as e:
+        #     print(f"[DomainRand] Warning: ground restitution not set: {e}")
 
-        rand_kp = (kp_high - kp_low) * torch.rand(len(envs_idx), device=self.device) + kp_low
-        rand_kd = (kd_high - kd_low) * torch.rand(len(envs_idx), device=self.device) + kd_low
+        # # --- PDゲイン ---
+        # kp_low, kp_high = dr["kp"]
+        # kd_low, kd_high = dr["kd"]
 
-        kp_tensor = rand_kp.repeat_interleave(len(self.motors_dof_idx))
-        kd_tensor = rand_kd.repeat_interleave(len(self.motors_dof_idx))
+        # rand_kp = (kp_high - kp_low) * torch.rand(len(envs_idx), device=self.device) + kp_low
+        # rand_kd = (kd_high - kd_low) * torch.rand(len(envs_idx), device=self.device) + kd_low
 
-        self.robot.set_dofs_kp(kp_tensor.cpu().numpy(), self.motors_dof_idx, envs_idx)
-        self.robot.set_dofs_kv(kd_tensor.cpu().numpy(), self.motors_dof_idx, envs_idx)
+        # kp_tensor = rand_kp.repeat_interleave(len(self.motors_dof_idx))
+        # kd_tensor = rand_kd.repeat_interleave(len(self.motors_dof_idx))
+
+        # self.robot.set_dofs_kp(kp_tensor.cpu().numpy(), self.motors_dof_idx, envs_idx)
+        # self.robot.set_dofs_kv(kd_tensor.cpu().numpy(), self.motors_dof_idx, envs_idx)
 
     def env_step(self): ## override
         self.robot.control_dofs_position(self.target_dof_pos, self.motors_dof_idx)
