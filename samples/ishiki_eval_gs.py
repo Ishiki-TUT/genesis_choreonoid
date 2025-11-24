@@ -39,7 +39,7 @@ def save_simple_csv(step_data, obs_data, exp_name, ckpt, torque_data=None, actio
     
     # obs_dataディレクトリを作成
     os.makedirs('obs_data', exist_ok=True)
-    csv_filename = f'obs_data/genesis_{exp_name}_ckpt{ckpt}_scale{action_scale}_fixed.csv'
+    csv_filename = f'obs_data/genesis_{exp_name}_ckpt{ckpt}_scale{action_scale}.csv'
     df.to_csv(csv_filename, index=False)
     
     print(f"データを保存しました: {csv_filename}")
@@ -166,12 +166,18 @@ def eval_policy_with_data_collection(env, policy, args):
 
 def eval_policy_continuous(env, policy, args):
     """連続評価（データ収集なし）"""
+    cnt = 0
     obs, _ = env.reset()
     with torch.no_grad():
         while True:
+            cnt += 1
             actions = policy(obs)
             actions = actions * args.action_scale  # スケール調整
             obs, rews, dones, infos = env.step(actions)
+            print(f"Step: {cnt}")
+            print("actions : ", actions)
+            print("obs : ", obs["policy"])
+            
 
 if __name__ == "__main__":
     env, policy, args = main()

@@ -117,7 +117,7 @@ def get_cfgs():
         ],
         # PD
         "kp": 2000.0,  # 2000.0,
-        "kd": 500.0,  # 500.0
+        "kd": 50.0,  # 500.0
         # "kp": 2500.0,
         # "kd": 700.0,
         # termination
@@ -140,7 +140,7 @@ def get_cfgs():
 
         # domain randomization
         "domain_rand": {
-            "friction": [0.4, 1.0],         # 地面摩擦係数範囲
+            "friction": [0.1, 2.0],         # 地面摩擦係数範囲
             "restitution": [0.0, 0.5],      # 地面反発係数範囲
             "kp": [15000.0, 25000.0],       # Pゲイン範囲
             "kd": [40.0, 80.0],             # Dゲイン範囲
@@ -155,24 +155,71 @@ def get_cfgs():
             "dof_vel": 0.05,
         },
     }
+    # reward_cfg = {
+    #     "tracking_sigma": 0.25,
+    #     "base_height_target": 0.64,
+    #     "feet_height_target": 0.075,
+    #     "reward_scales": {
+    #         "tracking_lin_vel": 2.0, # 2.0
+    #         "tracking_ang_vel": 0.4,
+    #         "lin_vel_z": -1.0,
+    #         "base_height": -50.0,
+    #         "action_rate": -0.005,  # -0.005
+    #         "similar_to_default": -0.1,
+    #         # "effort": 0.01,
+    #         # "tracking_error": -0.1,
+    #         "episode_len": 0.01,
+    #         "correct_action": 0.01,
+    #         "min_ankle_height": 1,
+    #         # "plus_watt": -0.01,
+    #     },
+    # }
     reward_cfg = {
         "tracking_sigma": 0.25,
         "base_height_target": 0.64,
         "feet_height_target": 0.075,
         "reward_scales": {
-            "tracking_lin_vel": 2.0,
-            "tracking_ang_vel": 0.4,
-            "lin_vel_z": -1.0,
-            "base_height": -50.0,
-            "action_rate": -0.005,
-            "similar_to_default": -0.1,
+            "tracking_lin_vel": 0.2, # 2.0
+            "tracking_ang_vel": 0.04,
+            "lin_vel_z": -0.1,
+            "base_height": -5.0,
+            "action_rate": -0.0005,  # -0.005
+            "similar_to_default": -0.01,
             # "effort": 0.01,
             # "tracking_error": -0.1,
-            "episode_len": 0.01,
-            "correct_action": 0.01,
-            "min_ankle_height": 1,
+            "episode_len": 0.001,
+            "correct_action": 0.001,
+            "min_ankle_height": 0.1,
+            # "plus_watt": -0.01,
         },
     }
+    # reward_cfg = {
+    #     "tracking_sigma": 0.25,
+    #     "base_height_target": 0.64,
+    #     "feet_height_target": 0.075,
+    #     "reward_scales": {
+    #         "tracking_lin_vel": 3.0,
+    #         "tracking_ang_vel": 0.4,
+
+    #         "lin_vel_z": -1.0,
+    #         "base_rotation_R": -3.0,
+    #         "base_rotation_P": -3.0,
+
+    #         "base_height": -3.0,
+
+    #         "action_rate": -0.003,
+    #         "plus_watt": -0.01,
+
+    #         "episode_len": 0.01,
+    #         "min_ankle_height": 0.15,
+
+    #         # ほぼ無効化（邪魔）
+    #         "similar_to_default": -0.001,
+    #         "correct_action": 0.0,
+    #         "joint_position_error": 0.0,
+    #         "effort": 0.0,
+    #     }
+    # }
     command_cfg = {
         "num_commands": 3,
         "lin_vel_x_range": [0.5, 0.5],
