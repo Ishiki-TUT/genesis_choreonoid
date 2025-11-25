@@ -23,7 +23,7 @@ class RLEnvGenesis(RLEnvBase):
                 vertical_scale=0.005,
                 pos=(-5.0, -15.0, 0.0),
                 subterrain_types=[
-                    ["fractal_terrain", "fractal_terrain", "flat_terrain", "fractal_terrain", "fractal_terrain"],
+                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain"],
                     ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain"],
                     ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain"],
                     ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain"],

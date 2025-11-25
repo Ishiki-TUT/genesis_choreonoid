@@ -124,7 +124,7 @@ def get_cfgs():
         "termination_if_roll_greater_than": 10,  # degree
         "termination_if_pitch_greater_than": 10,
         # base pose
-        "base_init_pos": [0.0, 0.0, 0.64],
+        "base_init_pos": [0.0, 0.0, 0.80], # [0.0, 0.0, 0.64]
         "base_init_quat": [1.0, 0.0, 0.0, 0.0],
         "episode_length_s": 20.0,
         "resampling_time_s": 4.0,
@@ -155,44 +155,44 @@ def get_cfgs():
             "dof_vel": 0.05,
         },
     }
-    # reward_cfg = {
-    #     "tracking_sigma": 0.25,
-    #     "base_height_target": 0.64,
-    #     "feet_height_target": 0.075,
-    #     "reward_scales": {
-    #         "tracking_lin_vel": 2.0, # 2.0
-    #         "tracking_ang_vel": 0.4,
-    #         "lin_vel_z": -1.0,
-    #         "base_height": -50.0,
-    #         "action_rate": -0.005,  # -0.005
-    #         "similar_to_default": -0.1,
-    #         # "effort": 0.01,
-    #         # "tracking_error": -0.1,
-    #         "episode_len": 0.01,
-    #         "correct_action": 0.01,
-    #         "min_ankle_height": 1,
-    #         # "plus_watt": -0.01,
-    #     },
-    # }
     reward_cfg = {
         "tracking_sigma": 0.25,
         "base_height_target": 0.64,
         "feet_height_target": 0.075,
         "reward_scales": {
-            "tracking_lin_vel": 0.2, # 2.0
-            "tracking_ang_vel": 0.04,
-            "lin_vel_z": -0.1,
-            "base_height": -5.0,
-            "action_rate": -0.0005,  # -0.005
-            "similar_to_default": -0.01,
+            "tracking_lin_vel": 2.0, # 2.0
+            "tracking_ang_vel": 0.4,
+            "lin_vel_z": -1.0,
+            "base_height": -50.0,
+            "action_rate": -0.005,  # -0.005
+            "similar_to_default": -0.1,
             # "effort": 0.01,
             # "tracking_error": -0.1,
-            "episode_len": 0.001,
-            "correct_action": 0.001,
-            "min_ankle_height": 0.1,
+            "episode_len": 0.01,
+            "correct_action": 0.01,
+            "min_ankle_height": 1,
             # "plus_watt": -0.01,
         },
     }
+    # reward_cfg = {
+    #     "tracking_sigma": 0.25,
+    #     "base_height_target": 0.64,
+    #     "feet_height_target": 0.075,
+    #     "reward_scales": {
+    #         "tracking_lin_vel": 0.2, # 2.0
+    #         "tracking_ang_vel": 0.04,
+    #         "lin_vel_z": -0.1,
+    #         "base_height": -5.0,
+    #         "action_rate": -0.0005,  # -0.005
+    #         "similar_to_default": -0.01,
+    #         # "effort": 0.01,
+    #         # "tracking_error": -0.1,
+    #         "episode_len": 0.001,
+    #         "correct_action": 0.001,
+    #         "min_ankle_height": 0.1,
+    #         # "plus_watt": -0.01,
+    #     },
+    # }
     # reward_cfg = {
     #     "tracking_sigma": 0.25,
     #     "base_height_target": 0.64,

@@ -44,7 +44,7 @@ def load_data():
     # genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
     genesis_df = pd.read_csv('obs_data/genesis_friction-walking-fractal-kp2000kd50_ckpt100_scale1.0.csv')
     # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale1.0.csv')
-    cnoid_df = pd.read_csv('obs_data/cnoid_friction-walking-fractal-kp2000kd50_ckpt100_scale1.0.csv')
+    cnoid_df = pd.read_csv('obs_data/cnoid_friction-walking-fractal-kp2000kd50_ckpt100_scale1.0_rotorInertia0.9.csv')
 
     print(f"Genesis data shape: {genesis_df.shape}")
     print(f"Choreonoid data shape: {cnoid_df.shape}")

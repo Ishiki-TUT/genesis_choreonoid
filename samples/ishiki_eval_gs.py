@@ -178,6 +178,7 @@ def eval_policy_continuous(env, policy, args):
             print("actions : ", actions)
             print("obs : ", obs["policy"])
             
+            
 
 if __name__ == "__main__":
     env, policy, args = main()
