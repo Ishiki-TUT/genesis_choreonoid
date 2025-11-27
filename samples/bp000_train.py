@@ -121,27 +121,29 @@ def get_cfgs():
         # "kp": 2500.0,
         # "kd": 700.0,
         # termination
-        "termination_if_roll_greater_than": 10,  # degree
-        "termination_if_pitch_greater_than": 10,
+        "termination_if_roll_greater_than": 10,  # 10 degree
+        "termination_if_pitch_greater_than": 10, # 10 degree
         # base pose
-        "base_init_pos": [0.0, 0.0, 0.80], # [0.0, 0.0, 0.64]
+        "base_init_pos": [0.0, 0.0, 0.64], # [0.0, 0.0, 0.64]
         "base_init_quat": [1.0, 0.0, 0.0, 0.0],
         "episode_length_s": 20.0,
         "resampling_time_s": 4.0,
-        "action_scale": 0.25,
+        "action_scale": 1.00, # 0.25
         "simulate_action_latency": True,
         "clip_actions": 100.0,
         "dt": 0.01,
         "substeps": 10,
         "rotorInertia": 0.1,
         # noise settings
-        "base_roll_noise": [-0.0087, 0.0087],  # rad 0.5 deg
-        "base_pitch_noise": [-0.0087, 0.0087],  # rad 0.5 deg
+        "base_roll_noise": [-0.00, 0.00],  # rad (0.5 deg)
+        "base_pitch_noise": [-0.00, 0.00], # rad (0.5 deg)
+        # "base_roll_noise": [-0.0087, 0.0087],  # rad (0.5 deg)
+        # "base_pitch_noise": [-0.0087, 0.0087], # rad (0.5 deg)
 
         # domain randomization
         "domain_rand": {
             "friction": [0.1, 2.0],         # 地面摩擦係数範囲
-            "restitution": [0.0, 0.5],      # 地面反発係数範囲
+            "restitution": [0.0, 0.2],      # 地面反発係数範囲
             "kp": [15000.0, 25000.0],       # Pゲイン範囲
             "kd": [40.0, 80.0],             # Dゲイン範囲
         },
@@ -222,7 +224,7 @@ def get_cfgs():
     # }
     command_cfg = {
         "num_commands": 3,
-        "lin_vel_x_range": [0.5, 0.5],
+        "lin_vel_x_range": [0.5, 0.5], # [0.5, 0.5]
         # "lin_vel_x_range": [0.0, 1.0],
         "lin_vel_y_range": [0, 0],
         "ang_vel_range": [0, 0],

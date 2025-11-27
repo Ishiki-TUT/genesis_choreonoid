@@ -44,7 +44,7 @@ def load_data():
     # genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
     genesis_df = pd.read_csv('obs_data/genesis_friction-walking-fractal-kp2000kd50_ckpt100_scale1.0.csv')
     # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale1.0.csv')
-    cnoid_df = pd.read_csv('obs_data/cnoid_friction-walking-fractal-kp2000kd50_ckpt100_scale1.0_rotorInertia0.9.csv')
+    cnoid_df = pd.read_csv('obs_data/cnoid_friction-walking-fractal-kp2000kd50_ckpt100_scale1.0.csv')
 
     print(f"Genesis data shape: {genesis_df.shape}")
     print(f"Choreonoid data shape: {cnoid_df.shape}")
@@ -178,6 +178,7 @@ def plot_dof_pos_comparison(data):
     
     fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
     axes = axes.flatten()
+    FIXED_YLIM = (-0.25, 0.25)  # 固定範囲設定（必要に応じてNoneに変更可能）
     
     for i in range(12):
         axes[i].plot(steps, genesis_dof_pos[:, i], 
@@ -198,6 +199,7 @@ def plot_dof_pos_comparison(data):
         axes[i].set_ylabel('Joint Position [rad]')
         axes[i].legend(fontsize=8)
         axes[i].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
+        axes[i].set_ylim(FIXED_YLIM)  # 固定範囲を適用
         
         # 統計情報を表示
         g_mean = np.mean(genesis_dof_pos[:, i])
@@ -227,7 +229,8 @@ def plot_dof_vel_comparison(data):
     
     fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
     axes = axes.flatten()
-    
+    FIXED_YLIM = (-0.5, 0.5)  # 固定範囲設定（必要に応じてNoneに変更可能）
+
     for i in range(12):
         axes[i].plot(steps, genesis_dof_vel[:, i], 
                     label='Genesis', 
@@ -247,6 +250,7 @@ def plot_dof_vel_comparison(data):
         axes[i].set_ylabel('Joint Velocity [rad/s]')
         axes[i].legend(fontsize=8)
         axes[i].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
+        axes[i].set_ylim(FIXED_YLIM)  # 固定範囲を適用
         
         # 統計情報を表示
         g_mean = np.mean(genesis_dof_vel[:, i])
@@ -276,6 +280,7 @@ def plot_action_comparison(data):
     
     fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
     axes = axes.flatten()
+    FIXED_YLIM = (-1.0, 1.0)  # 固定範囲設定（必要に応じてNoneに変更可能）
     
     for i in range(12):
         axes[i].plot(steps, genesis_actions[:, i], 
@@ -289,6 +294,8 @@ def plot_action_comparison(data):
                     color=COLORS['choreonoid_action'],
                     linewidth=PLOT_CONFIG['linewidth'],
                     alpha=PLOT_CONFIG['alpha_line'])
+        
+        axes[i].set_ylim(FIXED_YLIM)  # 固定範囲を適用
         
         axes[i].set_title(f'{JOINT_NAMES[i]} Action (obs_{33+i})', 
                          fontsize=12, fontweight='bold')
@@ -327,6 +334,7 @@ def plot_torque_comparison(data):
     steps = np.arange(len(genesis_torque))
     fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
     axes = axes.flatten()
+    FIXED_YLIM = (-300.0, 600.0)
 
     for i in range(12):
         axes[i].plot(
@@ -344,6 +352,7 @@ def plot_torque_comparison(data):
         axes[i].set_ylabel('Torque [Nm]')
         axes[i].legend(fontsize=8)
         axes[i].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
+        axes[i].set_ylim(FIXED_YLIM)  # 固定範囲を適用
 
         # 統計情報
         g_mean = np.mean(genesis_torque[:, i])
@@ -377,6 +386,9 @@ def plot_comprehensive_comparison(data):
     
     # 最初の4関節について詳細比較
     fig, axes = plt.subplots(4, 3, figsize=PLOT_CONFIG['figsize_large'])
+    FIXED_YLIM_POS = (-0.25, 0.25)
+    FIXED_YLIM_VEL = (-0.25, 0.25)
+    FIXED_YLIM_ACTION = (-1.0, 1.0)
     
     for joint_idx in range(4):  # 最初の4関節
         joint_name = JOINT_NAMES[joint_idx]
@@ -392,6 +404,7 @@ def plot_comprehensive_comparison(data):
         axes[joint_idx, 0].set_ylabel('Position [rad]')
         axes[joint_idx, 0].legend(fontsize=8)
         axes[joint_idx, 0].grid(True, alpha=0.3)
+        axes[joint_idx, 0].set_ylim(FIXED_YLIM_POS)
         
         # Velocity (obs_21~32)
         axes[joint_idx, 1].plot(steps, genesis_dof_vel[:, joint_idx], 
@@ -404,6 +417,7 @@ def plot_comprehensive_comparison(data):
         axes[joint_idx, 1].set_ylabel('Velocity [rad/s]')
         axes[joint_idx, 1].legend(fontsize=8)
         axes[joint_idx, 1].grid(True, alpha=0.3)
+        axes[joint_idx, 1].set_ylim(FIXED_YLIM_VEL)
         
         # Action (obs_33~44)
         axes[joint_idx, 2].plot(steps, genesis_actions[:, joint_idx], 
@@ -416,6 +430,7 @@ def plot_comprehensive_comparison(data):
         axes[joint_idx, 2].set_ylabel('Action Value')
         axes[joint_idx, 2].legend(fontsize=8)
         axes[joint_idx, 2].grid(True, alpha=0.3)
+        axes[joint_idx, 2].set_ylim(FIXED_YLIM_ACTION)
         
         # X軸ラベルは最下段のみ
         if joint_idx == 3:
