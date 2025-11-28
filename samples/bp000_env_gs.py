@@ -2,6 +2,7 @@ import sys
 import os
 
 from rl_env_gs import RLEnvGenesis
+# from rl_env_gs_tr import RLEnvGenesis
 import genesis as gs
 import torch
 import numpy as np
