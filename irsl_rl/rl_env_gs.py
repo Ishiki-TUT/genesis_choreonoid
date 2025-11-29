@@ -1,5 +1,5 @@
 import torch
-
+import numpy as np
 import genesis as gs
 from genesis.utils.geom import quat_to_xyz, transform_by_quat, inv_quat, transform_quat_by_quat
 
@@ -17,17 +17,19 @@ class RLEnvGenesis(RLEnvBase):
 
         self.plane = self.scene.add_entity(
             morph=gs.morphs.Terrain(
-                n_subterrains=(5, 5),
-                subterrain_size=(6.0, 6.0),
+                n_subterrains=(7, 7),
+                subterrain_size=(3.0, 3.0),
                 horizontal_scale=0.25,
-                vertical_scale=0.5, # 0.005
-                pos=(-3.0, -15.0, 0.0),
+                vertical_scale=0.005, # 0.005
+                pos=(-7.5, -10.5, 0.0),
                 subterrain_types=[
-                    ["fractal_terrain", "fractal_terrain", "flat_terrain", "fractal_terrain", "fractal_terrain"],
-                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain"],
-                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain"],
-                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain"],
-                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain"],
+                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
+                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
+                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "flat_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain"],
+                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
+                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
+                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
+                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
                 ],
             ),
         )
@@ -101,17 +103,21 @@ class RLEnvGenesis(RLEnvBase):
             print(f"[DomainRand] Warning: ground friction/restitution not set: {e}")
 
         # --- PDゲイン ---
-        # kp_low, kp_high = dr["kp"]
-        # kd_low, kd_high = dr["kd"]
-
-        # rand_kp = (kp_high - kp_low) * torch.rand(len(envs_idx), device=self.device) + kp_low
-        # rand_kd = (kd_high - kd_low) * torch.rand(len(envs_idx), device=self.device) + kd_low
-
-        # kp_tensor = rand_kp.repeat_interleave(len(self.motors_dof_idx))
-        # kd_tensor = rand_kd.repeat_interleave(len(self.motors_dof_idx))
-
-        # self.robot.set_dofs_kp(kp_tensor.cpu().numpy(), self.motors_dof_idx, envs_idx)
-        # self.robot.set_dofs_kv(kd_tensor.cpu().numpy(), self.motors_dof_idx, envs_idx)
+        dr = self.env_cfg["domain_rand"]
+        kp_range = dr["kp"]
+        kd_range = dr["kd"]
+        
+        # リセットされる環境1つずつに対して設定を行う（確実な方法）
+        # ※Pythonループは遅いですが、リセット時は許容範囲です
+        for i, env_id in enumerate(envs_idx):
+            # ランダムなゲインを生成
+            kp = np.random.uniform(kp_range[0], kp_range[1])
+            kd = np.random.uniform(kd_range[0], kd_range[1])
+            
+            # その環境の全関節に適用
+            # envs_idx=[env_id] とすることで、その環境だけ更新
+            self.robot.set_dofs_kp([kp]*self.num_actions, self.motors_dof_idx, envs_idx=[env_id])
+            self.robot.set_dofs_kv([kd]*self.num_actions, self.motors_dof_idx, envs_idx=[env_id])
 
 
     def env_step(self): ## override

@@ -41,6 +41,7 @@ class BP000EnvGenesis(RLEnvGenesis):
         self.l_ankle_z[:] = get_link_lowest_point_z(self.robot.get_link(name="L_ANKLE_R"))
         self.r_ankle_z[:] = get_link_lowest_point_z(self.robot.get_link(name="R_ANKLE_R"))
         self.max_ankle_height[:], _ = torch.max(torch.stack([self.l_ankle_z, self.r_ankle_z]), dim=0)
-        
+        return self.max_ankle_height
+
     def _reward_min_ankle_height(self):
-       return torch.square(self.max_ankle_height)
+       return torch.square(self.specific_update_buffer())

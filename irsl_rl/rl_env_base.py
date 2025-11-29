@@ -140,6 +140,7 @@ class RLEnvBase:
             rew = reward_func() * self.reward_scales[name]
             self.rew_buf += rew
             self.episode_sums[name] += rew
+            # print(f"reward {name}: {rew.mean().item():.4f}")
 
         # compute observations
         self.obs_buf = torch.cat(

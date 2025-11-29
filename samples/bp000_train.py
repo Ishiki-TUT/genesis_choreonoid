@@ -135,10 +135,10 @@ def get_cfgs():
         "substeps": 10,
         "rotorInertia": 0.1,
         # noise settings
-        "base_roll_noise": [-0.00, 0.00],  # rad (0.5 deg)
-        "base_pitch_noise": [-0.00, 0.00], # rad (0.5 deg)
-        # "base_roll_noise": [-0.0087, 0.0087],  # rad (0.5 deg)
-        # "base_pitch_noise": [-0.0087, 0.0087], # rad (0.5 deg)
+        #"base_roll_noise": [-0.00, 0.00],  # rad (0.5 deg)
+        #"base_pitch_noise": [-0.00, 0.00], # rad (0.5 deg)
+        "base_roll_noise": [-0.0087, 0.0087],  # rad (0.5 deg)
+        "base_pitch_noise": [-0.0087, 0.0087], # rad (0.5 deg)
 
         # domain randomization
         "domain_rand": {
@@ -163,17 +163,17 @@ def get_cfgs():
         "feet_height_target": 0.075,
         "reward_scales": {
             "tracking_lin_vel": 2.0, # 2.0
-            "tracking_ang_vel": 0.4,
-            "lin_vel_z": -1.0,
-            "base_height": -50.0,
-            "action_rate": -0.005,  # -0.005
+            "tracking_ang_vel": 1.0, # 0.4
+            "lin_vel_z": -2.0,
+            "base_height": -10.0, # -50.0
+            "action_rate": -0.5,  # -0.005
             "similar_to_default": -0.1,
             # "effort": 0.01,
             # "tracking_error": -0.1,
-            "episode_len": 0.01,
-            "correct_action": 0.01,
-            "min_ankle_height": 1,
-            # "plus_watt": -0.01,
+            "episode_len": 0.2, # 0.01
+            "correct_action": 0.1, # 0.01
+            "min_ankle_height": 2.0, #10.0
+            "plus_watt": 0.5, # -0.01
         },
     }
     # reward_cfg = {
