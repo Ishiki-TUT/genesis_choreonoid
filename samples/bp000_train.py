@@ -142,10 +142,10 @@ def get_cfgs():
 
         # domain randomization
         "domain_rand": {
-            "friction": [0.1, 2.0],         # 地面摩擦係数範囲
+            "friction": [0.4, 1.1],         # 地面摩擦係数範囲
             "restitution": [0.0, 0.2],      # 地面反発係数範囲
-            "kp": [15000.0, 25000.0],       # Pゲイン範囲
-            "kd": [40.0, 80.0],             # Dゲイン範囲
+            "kp": [1800.0, 2200.0],       # Pゲイン範囲
+            "kd": [25.0, 100.0],          # Dゲイン範囲
         },
     }
     obs_cfg = {
@@ -162,18 +162,19 @@ def get_cfgs():
         "base_height_target": 0.64,
         "feet_height_target": 0.075,
         "reward_scales": {
-            "tracking_lin_vel": 2.0, # 2.0
-            "tracking_ang_vel": 1.0, # 0.4
+            "tracking_lin_vel": 8.0, # 2.0
+            "tracking_ang_vel": 0.8, # 0.4
             "lin_vel_z": -2.0,
-            "base_height": -10.0, # -50.0
-            "action_rate": -0.5,  # -0.005
+            "base_height": -5.0, # -50.0
+            "action_rate": -0.01,  # -0.005
             "similar_to_default": -0.1,
             # "effort": 0.01,
             # "tracking_error": -0.1,
-            "episode_len": 0.2, # 0.01
-            "correct_action": 0.1, # 0.01
-            "min_ankle_height": 2.0, #10.0
-            "plus_watt": 0.5, # -0.01
+            "episode_len": 0.1, # 0.01
+            "correct_action": 0.01, # 0.01
+            "min_ankle_height": 0.0, #10.0
+            "plus_watt": 0.01, # -0.01
+            "ankle_regularization": -0.0001,
         },
     }
     # reward_cfg = {
