@@ -48,6 +48,10 @@ class BP000EnvGenesis(RLEnvGenesis):
     def _reward_min_ankle_height(self):
        return torch.square(self.specific_update_buffer())
     
+    # def _reward_min_ankle_height(self):
+    #    return torch.exp(self.specific_update_buffer())  squareかexpか選択
+
+##追加リワード
     def _reward_ankle_regularization(self):
         """
         足首のPitch（前後）とRoll（左右）の傾きを罰する
@@ -81,3 +85,57 @@ class BP000EnvGenesis(RLEnvGenesis):
             total_penalty += torch.sum(roll_penalty + 0.1 * pitch_penalty)
             
         return total_penalty
+
+    def _reward_feet_stride(self):
+            """
+            【歩幅のリワード】
+            左右の足が「進行方向（X軸）」にどれだけ離れているかを評価します。
+            これが大きい＝Hip Pitchを使って足を前に出している、ということになります。
+            """
+            foot_names = self.env_cfg.get("feet_link_names", ["L_ANKLE_R", "R_ANKLE_R"])
+            
+            # 足の位置を取得
+            feet_pos = []
+            for name in foot_names:
+                link = self.robot.get_link(name)
+                # ローカル座標ではなくワールド座標でOK（進行方向がX軸と仮定）
+                # もしロボットが回転する場合は、ベース座標系への変換が必要ですが、
+                # 学習初期はワールドX軸の距離を見るだけで十分機能します。
+                feet_pos.append(link.get_pos())
+                
+            if len(feet_pos) < 2:
+                return 0.0
+                
+            # 左足と右足の位置
+            pos1 = feet_pos[0]
+            pos2 = feet_pos[1]
+            
+            # 進行方向(X軸)の距離の絶対値
+            # 前後に開けば開くほど報酬が増える
+            stride = torch.abs(pos1[:, 0] - pos2[:, 0])
+            
+            # ただし、ある程度以上（例: 0.5m）開いたらそれ以上は求めない（股裂き防止）
+            return torch.clamp(stride, max=0.5)
+
+    def _reward_hip_pitch_motion(self):
+        """
+        【Hip Pitchの可動域リワード】
+        Hip Pitch関節が、直立状態(0度)から大きく動くことを推奨する。
+        """
+        # Hip Pitch関節のインデックスを探す
+        if not hasattr(self, "_hip_pitch_indices"):
+            joint_names = self.env_cfg["joint_names"]
+            indices = []
+            for i, name in enumerate(joint_names):
+                name_lower = name.lower()
+                # "hip" と "pitch" が含まれる関節
+                if "hip" in name_lower and "pitch" in name_lower:
+                    indices.append(i)
+            self._hip_pitch_indices = torch.tensor(indices, device=self.device, dtype=torch.long)
+            
+        if len(self._hip_pitch_indices) == 0:
+            return 0.0
+            
+        # 角度の絶対値（0度からどれだけ動いているか）の平均
+        target_angles = self.dof_pos[:, self._hip_pitch_indices]
+        return torch.mean(torch.square(target_angles), dim=1)

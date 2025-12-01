@@ -144,8 +144,8 @@ def get_cfgs():
         "domain_rand": {
             "friction": [0.4, 1.1],         # 地面摩擦係数範囲
             "restitution": [0.0, 0.2],      # 地面反発係数範囲
-            "kp": [1800.0, 2200.0],       # Pゲイン範囲
-            "kd": [25.0, 100.0],          # Dゲイン範囲
+            "kp": [1800.0, 2200.0],       # Pゲイン範囲 +-10%
+            "kd": [25.0, 100.0],          # Dゲイン範囲 +-50%
         },
     }
     obs_cfg = {
@@ -175,6 +175,8 @@ def get_cfgs():
             "min_ankle_height": 0.0, #10.0
             "plus_watt": 0.01, # -0.01
             "ankle_regularization": -0.0001,
+            "feet_stride": 1.0,
+            "hip_pitch_motion": 0.1,
         },
     }
     # reward_cfg = {

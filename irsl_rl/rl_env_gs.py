@@ -13,26 +13,26 @@ class RLEnvGenesis(RLEnvBase):
 
     def build_environment(self):
         # add plane
-        # self.plane = self.scene.add_entity(gs.morphs.URDF(file="urdf/plane/plane.urdf", fixed=True))
+        self.plane = self.scene.add_entity(gs.morphs.URDF(file="urdf/plane/plane.urdf", fixed=True))
 
-        self.plane = self.scene.add_entity(
-            morph=gs.morphs.Terrain(
-                n_subterrains=(7, 7),
-                subterrain_size=(3.0, 3.0),
-                horizontal_scale=0.25,
-                vertical_scale=0.005, # 0.005
-                pos=(-7.5, -10.5, 0.0),
-                subterrain_types=[
-                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
-                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
-                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "flat_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain"],
-                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
-                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
-                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
-                    ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
-                ],
-            ),
-        )
+        # self.plane = self.scene.add_entity(
+        #     morph=gs.morphs.Terrain(
+        #         n_subterrains=(7, 7),
+        #         subterrain_size=(3.0, 3.0),
+        #         horizontal_scale=0.25,
+        #         vertical_scale=0.005, # 0.005
+        #         pos=(-7.5, -10.5, 0.0),
+        #         subterrain_types=[
+        #             ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
+        #             ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
+        #             ["fractal_terrain", "fractal_terrain", "fractal_terrain", "flat_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain"],
+        #             ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
+        #             ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
+        #             ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
+        #             ["fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain", "fractal_terrain","fractal_terrain","fractal_terrain"],
+        #         ],
+        #     ),
+        # )
 
     def scene_build(self, substeps, robot_urdf_path, show_viewer):
         # create scene
