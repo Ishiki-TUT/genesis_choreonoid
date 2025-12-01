@@ -7,7 +7,7 @@ import genesis as gs
 import torch
 import numpy as np
 
-from genesis.utils.geom import transform_quat_by_quat, quat_to_xyz
+from genesis.utils.geom import transform_quat_by_quat, quat_to_xyz, transform_by_quat, inv_quat
 
 
 def get_link_lowest_point_z(link):
@@ -147,3 +147,45 @@ class BP000EnvGenesis(RLEnvGenesis):
         # 指定関節の角度の二乗平均（動きを推奨）
         target_angles = self.dof_pos[:, self._hip_pitch_indices]
         return torch.mean(torch.square(target_angles), dim=1)
+    
+    def _reward_feet_alternating_pos(self):
+        """
+        【座標ベースの交互歩行リワード】
+        足の絶対座標ではなく、ベース（体幹）から見た相対座標を計算し、
+        左右の足が「前後（X軸方向）」に逆位置にあることを推奨する。
+        （いわゆる「シザーズ（ハサミ）」のような形を作るリワード）
+        """
+        foot_names = self.env_cfg.get("feet_link_names", ["L_ANKLE_R", "R_ANKLE_R"])
+        
+        # 1. ベースの姿勢情報の準備
+        # ベースの逆回転クォータニオンを計算
+        inv_base_quat = inv_quat(self.base_quat)
+        
+        feet_local_x = []
+        
+        for name in foot_names:
+            link = self.robot.get_link(name)
+            foot_world_pos = link.get_pos()
+            
+            # 2. ワールド座標 -> ベースローカル座標 への変換
+            # P_local = Rotate_inv(P_world - P_base)
+            rel_pos = foot_world_pos - self.base_pos
+            local_pos = transform_by_quat(rel_pos, inv_base_quat)
+            
+            # ローカルX座標（前後）のみ保存
+            feet_local_x.append(local_pos[:, 0])
+            
+        if len(feet_local_x) < 2:
+            return 0.0
+            
+        # 3. 左右のX座標の積を計算
+        # 左足(x1) * 右足(x2)
+        # 逆位置にあればマイナス、同じ側にあればプラスになる
+        pos_product = feet_local_x[0] * feet_local_x[1]
+        
+        # 4. 報酬の計算
+        # 積がマイナス（＝交互）であるほど良いので、マイナスを掛けてプラスの報酬にする
+        # 積が -0.1 (良い) -> 報酬 +0.1
+        # 積が +0.1 (悪い) -> 報酬 -0.1
+        # print("pos_product : ", pos_product)
+        return -pos_product
