@@ -120,22 +120,30 @@ class BP000EnvGenesis(RLEnvGenesis):
     def _reward_hip_pitch_motion(self):
         """
         【Hip Pitchの可動域リワード】
-        Hip Pitch関節が、直立状態(0度)から大きく動くことを推奨する。
+        特定の関節名を直接指定して、その関節が大きく動くことを推奨する。
         """
-        # Hip Pitch関節のインデックスを探す
+        # 初回のみインデックスを特定してキャッシュ
         if not hasattr(self, "_hip_pitch_indices"):
-            joint_names = self.env_cfg["joint_names"]
+            all_joints = self.env_cfg["joint_names"]
+            
+            # ★ここに計算対象の関節名を直接記述します
+            target_joints = ["R_HIP_P", "L_HIP_P"]
+            
             indices = []
-            for i, name in enumerate(joint_names):
-                name_lower = name.lower()
-                # "hip" と "pitch" が含まれる関節
-                if "hip" in name_lower and "pitch" in name_lower:
-                    indices.append(i)
+            for name in target_joints:
+                if name in all_joints:
+                    idx = all_joints.index(name)
+                    indices.append(idx)
+                else:
+                    # 万が一名前が間違っていた場合の警告
+                    print(f"[Warning] Joint '{name}' not found in robot joint list.")
+            
+            # GPU上のTensorとして保存
             self._hip_pitch_indices = torch.tensor(indices, device=self.device, dtype=torch.long)
             
         if len(self._hip_pitch_indices) == 0:
             return 0.0
             
-        # 角度の絶対値（0度からどれだけ動いているか）の平均
+        # 指定関節の角度の二乗平均（動きを推奨）
         target_angles = self.dof_pos[:, self._hip_pitch_indices]
         return torch.mean(torch.square(target_angles), dim=1)

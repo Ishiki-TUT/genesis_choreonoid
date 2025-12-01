@@ -172,7 +172,7 @@ def get_cfgs():
             # "tracking_error": -0.1,
             "episode_len": 0.1, # 0.01
             "correct_action": 0.01, # 0.01
-            "min_ankle_height": 0.0, #10.0
+            "min_ankle_height": 1.0, #10.0
             "plus_watt": 0.01, # -0.01
             "ankle_regularization": -0.0001,
             "feet_stride": 1.0,
