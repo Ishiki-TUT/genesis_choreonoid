@@ -292,3 +292,12 @@ class RLEnvBase:
     #def _reward_min_ankle_height(self):
     #    # ankle height
     #    return torch.square(self.min_ankle_height)
+
+    def _reward_dof_vel(self):
+        """
+        【関節速度ペナルティ】
+        全関節の角速度の二乗和を計算して罰則とする。
+        速く動けば動くほど、ペナルティが急激に大きくなる。
+        """
+        # self.dof_vel は (num_envs, num_dof) の形
+        return torch.sum(torch.square(self.dof_vel), dim=1)
