@@ -185,10 +185,10 @@ if __name__ == "__main__":
     env, policy, args = main()
     
     # データ収集付き評価を実行
-    # df = eval_policy_with_data_collection(env, policy, args)
+    df = eval_policy_with_data_collection(env, policy, args)
     
     # 必要に応じて連続評価も実行
-    eval_policy_continuous(env, policy, args)
+    # eval_policy_continuous(env, policy, args)
 
 """
 # 使用例:

@@ -42,9 +42,9 @@ def load_data():
     """データ読み込み"""
     print("Loading data...")
     # genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
-    genesis_df = pd.read_csv('obs_data/genesis_friction-walking-fractal-kp2000kd50_ckpt100_scale1.0.csv')
+    genesis_df = pd.read_csv('obs_data/genesis_friction-walking-terrain2-kp2000kd50-kpkdrand-8_ckpt100_scale1.0.csv')
     # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale1.0.csv')
-    cnoid_df = pd.read_csv('obs_data/cnoid_friction-walking-fractal-kp2000kd50_ckpt100_scale1.0.csv')
+    cnoid_df = pd.read_csv('obs_data/cnoid_friction-walking-terrain2-kp2000kd50-kpkdrand-8_ckpt100_scale1.0_rotorInertia0.1.csv')
 
     print(f"Genesis data shape: {genesis_df.shape}")
     print(f"Choreonoid data shape: {cnoid_df.shape}")
@@ -178,7 +178,7 @@ def plot_dof_pos_comparison(data):
     
     fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
     axes = axes.flatten()
-    FIXED_YLIM = (-0.25, 0.25)  # 固定範囲設定（必要に応じてNoneに変更可能）
+    FIXED_YLIM = (-1.20, 1.20)  # 固定範囲設定（必要に応じてNoneに変更可能）
     
     for i in range(12):
         axes[i].plot(steps, genesis_dof_pos[:, i], 
@@ -229,7 +229,7 @@ def plot_dof_vel_comparison(data):
     
     fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
     axes = axes.flatten()
-    FIXED_YLIM = (-0.5, 0.5)  # 固定範囲設定（必要に応じてNoneに変更可能）
+    FIXED_YLIM = (-1.2, 1.2)  # 固定範囲設定（必要に応じてNoneに変更可能）
 
     for i in range(12):
         axes[i].plot(steps, genesis_dof_vel[:, i], 
@@ -280,7 +280,7 @@ def plot_action_comparison(data):
     
     fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
     axes = axes.flatten()
-    FIXED_YLIM = (-1.0, 1.0)  # 固定範囲設定（必要に応じてNoneに変更可能）
+    FIXED_YLIM = (-1.2, 1.2)  # 固定範囲設定（必要に応じてNoneに変更可能）
     
     for i in range(12):
         axes[i].plot(steps, genesis_actions[:, i], 
@@ -386,9 +386,9 @@ def plot_comprehensive_comparison(data):
     
     # 最初の4関節について詳細比較
     fig, axes = plt.subplots(4, 3, figsize=PLOT_CONFIG['figsize_large'])
-    FIXED_YLIM_POS = (-0.25, 0.25)
-    FIXED_YLIM_VEL = (-0.25, 0.25)
-    FIXED_YLIM_ACTION = (-1.0, 1.0)
+    FIXED_YLIM_POS = (-1.20, 1.20)
+    FIXED_YLIM_VEL = (-1.20, 1.20)
+    FIXED_YLIM_ACTION = (-1.2, 1.2)
     
     for joint_idx in range(4):  # 最初の4関節
         joint_name = JOINT_NAMES[joint_idx]
