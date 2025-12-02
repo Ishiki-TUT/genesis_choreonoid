@@ -174,3 +174,51 @@ class BP000EnvGenesis(RLEnvGenesis):
         reward = reward * moving.float()
         
         return reward
+
+    def _reward_feet_pos_symmetry(self):
+        """
+        【足位置ベースの左右対称性ペナルティ】
+        Hip角度ではなく、実際の「足の前後位置(X)」を使って対称性を評価する。
+        ベース（体幹）から見て、
+        「左足のX」+「右足のX」が 0 になることを推奨する。
+        
+        例: 左(+0.3m) + 右(-0.3m) = 0.0 (OK! 綺麗に開いている)
+        例: 左(+0.3m) + 右(+0.1m) = +0.4 (NG! 両足とも前に出ている)
+        """
+        foot_names = self.env_cfg.get("feet_link_names", ["L_ANKLE_R", "R_ANKLE_R"])
+        
+        # 1. ベースの姿勢情報（逆回転用）
+        inv_base_quat = inv_quat(self.base_quat)
+        
+        feet_local_x = []
+        for name in foot_names:
+            link = self.robot.get_link(name)
+            
+            # 足のワールド座標を取得（get_AABBより高速）
+            foot_world_pos = link.get_pos()
+            
+            # 2. ワールド座標 -> ベースローカル座標 への変換
+            # これにより、ロボットがどの方角を向いていても「自分から見た前後」が計算できる
+            rel_pos = foot_world_pos - self.base_pos
+            local_pos = transform_by_quat(rel_pos, inv_base_quat)
+            
+            # X座標（前後）のみ保存
+            feet_local_x.append(local_pos[:, 0])
+            
+        if len(feet_local_x) < 2:
+            return torch.zeros(self.num_envs, device=self.device)
+            
+        # 3. 左右のX座標の「和」を計算
+        x_left = feet_local_x[0]
+        x_right = feet_local_x[1]
+        sum_x = x_left + x_right
+        
+        # 4. ベースのオフセット補正（重要）
+        # ロボットの初期姿勢で足がベースより少し後ろにある場合などは、
+        # "sum_x" が 0 ではなく定数（例: -0.05）に偏ることがある。
+        # 平均値を引くことで、その偏りをキャンセルし「変動成分」だけを見る。
+        # (バッチ全体の平均を引く簡易的なセンタリング)
+        # sum_x = sum_x - torch.mean(sum_x) 
+        
+        # 5. 和の絶対値をペナルティとして返す
+        return torch.abs(sum_x)
