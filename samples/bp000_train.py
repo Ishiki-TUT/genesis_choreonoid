@@ -166,7 +166,7 @@ def get_cfgs():
             "tracking_ang_vel": 0.8, # 0.4
             "lin_vel_z": -2.0,
             "base_height": -5.0, # -50.0
-            "action_rate": -0.1,  # -0.005
+            "action_rate": -0.05,  # -0.005
             "similar_to_default": -0.1,
             # "effort": 0.01,
             # "tracking_error": -0.1,
@@ -177,7 +177,7 @@ def get_cfgs():
             "ankle_regularization": -0.5,
             "feet_stride": 0.0, # 1.0
             "hip_pitch_motion": 0.0, # 0.1
-            "feet_alternating_pos": 2.0, # 5.0
+            "feet_alternating_pos": 10.0, # 5.0
             "dof_vel": 0.000, # -0.0005
             "feet_pos_symmetry": -1.0,
         },
