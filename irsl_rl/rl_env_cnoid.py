@@ -40,9 +40,9 @@ class RLEnvChoreonoid(RLEnvBase):
         for a, b in zip(jcnoid, jgs):
             if a != b:
                 ## self.env_cfg["joint_names"] -> self.srobot.jointNames
-                self.setAnglesoToCnoid = [ jcnoid.index(n) for n in jgs ]
+                self.setAnglesToCnoid = [ jcnoid.index(n) for n in jgs ] # setAnglesoToCnoid タイプミス?
                 ## self.srobot.jointNames -> self.env_cfg["joint_names"]
-                self.setAnglesoToGs = [ jgs.index(n) for n in jcnoid ]
+                self.setAnglesToGs = [ jgs.index(n) for n in jcnoid ] # setAnglesoToGs タイプミス?
                 break
 
     def startSim(self):
