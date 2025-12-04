@@ -176,8 +176,8 @@ def get_cfgs():
             "plus_watt": 0.01, # -0.01
             "ankle_regularization": -0.001,
             "feet_stride": 0.0, # 1.0
-            "hip_pitch_motion": 0.5, # 0.1
-            "feet_alternating_pos": 1.0, # 5.0
+            "hip_pitch_motion": 1.0, # 0.1
+            "feet_alternating_pos": 2.0, # 5.0
             # "feet_pos_symmetry": -1.0,
         },
     }
