@@ -248,86 +248,59 @@ class RLEnvBase:
         ang_vel_error = torch.square(self.commands[:, 2] - self.base_ang_vel[:, 2])
         return torch.exp(-ang_vel_error / self.reward_cfg["tracking_sigma"])
 
-    # def _reward_lin_vel_z(self):
-    #     # Penalize z axis base linear velocity
-    #     return torch.square(self.base_lin_vel[:, 2])
+    def _reward_lin_vel_z(self):
+        # Penalize z axis base linear velocity
+        return torch.square(self.base_lin_vel[:, 2])
 
-    # def _reward_action_rate(self):
-    #     # Penalize changes in actions
-    #     return torch.sum(torch.square(self.last_actions - self.actions), dim=1)
+    def _reward_action_rate(self):
+        # Penalize changes in actions
+        return torch.sum(torch.square(self.last_actions - self.actions), dim=1)
 
-    # def _reward_similar_to_default(self):
-    #     # Penalize joint poses far away from default pose
-    #     return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1)
-
-    # def _reward_base_height(self):
-    #     # Penalize base height away from target
-    #     return torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
-
-    # def _reward_effort(self):
-    #     # Penalize effort
-    #     #return torch.sum(torch.abs(self.dof_force), dim=1)
-    #     return torch.sum(torch.square(self.dof_force), dim=1)
-
-    # def _reward_base_rotation_P(self):
-    #     # Penalize base rotation
-    #     return torch.abs(self.base_euler[:, 1])
-
-    # def _reward_base_rotation_R(self):
-    #     # Penalize base rotation
-    #     return torch.abs(self.base_euler[:, 0])
-
-    # def _reward_episode_len(self):
-    #     return torch.ones((self.num_envs,), dtype=torch.float32)
-
-    # def _reward_correct_action(self):
-    #     return 1 / (1 + torch.sum(torch.square(self.exact_actions - self.actions), dim=1))
-
-    # def _reward_joint_position_error(self):
-    #     return 1 / (1 + torch.sum(torch.abs(self.target_dof_pos - self.dof_pos), dim=1))
-
-    # def _reward_plus_watt(self):
-    #     return 1 / (1 + torch.sum( torch.clamp(self.dof_force * self.dof_vel, min = 0), dim = 1 ))
-
-    # #def _reward_min_ankle_height(self):
-    # #    # ankle height
-    # #    return torch.square(self.min_ankle_height)
-
-    # def _reward_dof_vel(self):
-    #     """
-    #     【関節速度ペナルティ】
-    #     全関節の角速度の二乗和を計算して罰則とする。
-    #     速く動けば動くほど、ペナルティが急激に大きくなる。
-    #     """
-    #     # self.dof_vel は (num_envs, num_dof) の形
-    #     return torch.sum(torch.square(self.dof_vel), dim=1)
-
-# --------------------------------------------------------------------------------
-    # Paper-style Exponential Rewards (Gaussian Kernel)
-    # 論文 (2404.05695) 等で主流の「指数関数カーネル」を用いたリワード
-    # --------------------------------------------------------------------------------
+    def _reward_similar_to_default(self):
+        # Penalize joint poses far away from default pose
+        return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1)
 
     def _reward_base_height(self):
-        # ベース高さ維持
-        # 目標高さ(base_height_target)からのズレを評価
-        height_error = torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
-        return torch.exp(-height_error / 0.1)  # sigma=0.1 (厳しめ)
+        # Penalize base height away from target
+        return torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
 
-    def _reward_orientation(self):
-        # 姿勢維持: 重力ベクトルが [0, 0, -1] に向いているか
-        # projected_gravity は既に計算済みと仮定
-        # Z軸成分が -1.0 (直立) なら誤差0
-        # shape: (num_envs, 3) -> Z成分だけ見る、あるいはベクトル差を見る
-        
-        # 簡易版: 重力ベクトルのXY成分（傾き）を罰する
-        gravity_error = torch.sum(torch.square(self.projected_gravity[:, :2]), dim=1)
-        return torch.exp(-gravity_error / 0.05)  # sigma=0.05 (かなり厳格)
+    def _reward_effort(self):
+        # Penalize effort
+        #return torch.sum(torch.abs(self.dof_force), dim=1)
+        return torch.sum(torch.square(self.dof_force), dim=1)
 
-    def _reward_dof_pos(self):
-        # デフォルト姿勢維持 (Regularization)
-        # 大きく崩れないようにする
-        dof_pos_error = torch.sum(torch.square(self.dof_pos - self.default_dof_pos), dim=1)
-        return torch.exp(-dof_pos_error / 1.0) # sigma=1.0 (緩め)
+    def _reward_base_rotation_P(self):
+        # Penalize base rotation
+        return torch.abs(self.base_euler[:, 1])
+
+    def _reward_base_rotation_R(self):
+        # Penalize base rotation
+        return torch.abs(self.base_euler[:, 0])
+
+    def _reward_episode_len(self):
+        return torch.ones((self.num_envs,), dtype=torch.float32)
+
+    def _reward_correct_action(self):
+        return 1 / (1 + torch.sum(torch.square(self.exact_actions - self.actions), dim=1))
+
+    def _reward_joint_position_error(self):
+        return 1 / (1 + torch.sum(torch.abs(self.target_dof_pos - self.dof_pos), dim=1))
+
+    def _reward_plus_watt(self):
+        return 1 / (1 + torch.sum( torch.clamp(self.dof_force * self.dof_vel, min = 0), dim = 1 ))
+
+    #def _reward_min_ankle_height(self):
+    #    # ankle height
+    #    return torch.square(self.min_ankle_height)
+
+    def _reward_dof_vel(self):
+        """
+        【関節速度ペナルティ】
+        全関節の角速度の二乗和を計算して罰則とする。
+        速く動けば動くほど、ペナルティが急激に大きくなる。
+        """
+        # self.dof_vel は (num_envs, num_dof) の形
+        return torch.sum(torch.square(self.dof_vel), dim=1)
 
     # --------------------------------------------------------------------------------
     # Gait / Contact Rewards (論文のPattern Generation要素)
@@ -360,8 +333,3 @@ class RLEnvBase:
             reward += air * 1.0 
             
         return reward * is_moving.float()
-
-    def _reward_action_smoothness(self):
-        # アクションの滑らかさ (Action RateのExponential版)
-        error = torch.sum(torch.square(self.last_actions - self.actions), dim=1)
-        return torch.exp(-error / 0.05)
