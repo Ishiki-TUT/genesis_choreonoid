@@ -157,50 +157,61 @@ def get_cfgs():
             "dof_vel": 0.05,
         },
     }
-    reward_cfg = {
-        "tracking_sigma": 0.25,
-        "base_height_target": 0.64,
-        "feet_height_target": 0.075,
-        "reward_scales": {
-            "tracking_lin_vel": 8.0, # 2.0
-            "tracking_ang_vel": 0.8, # 0.4
-            "lin_vel_z": -2.0,
-            "base_height": -10.0, # -50.0
-            "action_rate": -0.02,  # -0.005
-            "similar_to_default": -0.1,
-            # "effort": 0.01,
-            # "tracking_error": -0.1,
-            "episode_len": 0.1, # 0.01
-            "correct_action": 0.05, # 0.01
-            "min_ankle_height": 1.0, #10.0
-            "plus_watt": 0.01, # -0.01
-            "ankle_regularization": -0.001,
-            "feet_stride": 0.0, # 1.0
-            "hip_pitch_motion": 0.5, # 0.1
-            "feet_alternating_pos": 1.0, # 5.0
-            # "feet_pos_symmetry": -1.0,
-        },
-    }
-
     # reward_cfg = {
     #     "tracking_sigma": 0.25,
     #     "base_height_target": 0.64,
     #     "feet_height_target": 0.075,
     #     "reward_scales": {
-    #         "tracking_lin_vel": 0.2, # 2.0
-    #         "tracking_ang_vel": 0.04,
-    #         "lin_vel_z": -0.1,
-    #         "base_height": -5.0,
-    #         "action_rate": -0.0005,  # -0.005
-    #         "similar_to_default": -0.01,
+    #         "tracking_lin_vel": 8.0, # 2.0
+    #         "tracking_ang_vel": 0.8, # 0.4
+    #         "lin_vel_z": -2.0,
+    #         "base_height": -10.0, # -50.0
+    #         "action_rate": -0.02,  # -0.005
+    #         "similar_to_default": -0.1,
     #         # "effort": 0.01,
     #         # "tracking_error": -0.1,
-    #         "episode_len": 0.001,
-    #         "correct_action": 0.001,
-    #         "min_ankle_height": 0.1,
-    #         # "plus_watt": -0.01,
+    #         "episode_len": 0.1, # 0.01
+    #         "correct_action": 0.05, # 0.01
+    #         "min_ankle_height": 1.0, #10.0
+    #         "plus_watt": 0.01, # -0.01
+    #         "ankle_regularization": -0.001,
+    #         "feet_stride": 0.0, # 1.0
+    #         "hip_pitch_motion": 0.5, # 0.1
+    #         "feet_alternating_pos": 1.0, # 5.0
+    #         # "feet_pos_symmetry": -1.0,
     #     },
     # }
+
+    reward_cfg = {
+        "tracking_sigma": 0.25,
+        "base_height_target": 0.64,
+        "feet_height_target": 0.075,
+        "reward_scales": {
+            # --- 論文スタイルのメインリワード (Exp Kernel) ---
+            # 係数は重要度を表します
+            
+            "tracking_lin_vel": 1.5,   # 最重要
+            "tracking_ang_vel": 0.8,
+            "base_height": 0.5,        # 高さを維持できたご褒美
+            "orientation": 1.0,        # 転ばないご褒美
+            "dof_pos": 0.5,           # 姿勢を保つご褒美
+            "action_smoothness": 0.2,  # 滑らかに動くご褒美
+
+            # --- 歩行生成リワード ---
+            # これが歩行のリズムを作ります
+            "feet_air_time": 2.0,      # 足を浮かせることを強く推奨
+
+            # --- 従来のペナルティ (補助的に残す) ---
+            # Exp形式にしにくいものはマイナスのままでOK
+            # "lin_vel_z": -2.0,         # 上下振動の抑制
+            # "dof_vel": -0.0005,        # 速度制限
+            # "torques": -0.0001,        # 省エネ
+            
+            # --- 前回作った便利機能 ---
+            # "feet_parallel": -0.5,     # ガニ股防止
+            # "feet_alternating_pos": 1.0, # ExpとAirTimeで歩けるなら、これは一旦切ってもOK
+        },
+    }
 
     # リドさんリワード設定
     # reward_cfg = {
