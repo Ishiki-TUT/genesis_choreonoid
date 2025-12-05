@@ -173,10 +173,10 @@ def get_cfgs():
             "episode_len": 0.1, # 0.01
             "correct_action": 0.05, # 0.01
             "min_ankle_height": 1.0, #10.0
-            "plus_watt": 0.01, # -0.01
+            "plus_watt": 0.05, # -0.01
             "ankle_regularization": -0.001,
             "feet_stride": 0.0, # 1.0
-            "hip_pitch_motion": 0.5, # 0.1
+            "hip_pitch_motion": 0.1, # 0.1
             "feet_alternating_pos": 1.0, # 5.0
             # "feet_pos_symmetry": -1.0,
             "feet_air_time": 2.0,      # 足を浮かせることを強く推奨
