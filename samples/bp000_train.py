@@ -135,17 +135,17 @@ def get_cfgs():
         "substeps": 10,
         "rotorInertia": 0.1,
         # noise settings
-        #"base_roll_noise": [-0.00, 0.00],  # rad (0.5 deg)
-        #"base_pitch_noise": [-0.00, 0.00], # rad (0.5 deg)
-        "base_roll_noise": [-0.0087, 0.0087],  # rad (0.5 deg)
-        "base_pitch_noise": [-0.0087, 0.0087], # rad (0.5 deg)
+        "base_roll_noise": [-0.00, 0.00],  # rad (0.5 deg)
+        "base_pitch_noise": [-0.00, 0.00], # rad (0.5 deg)
+        # "base_roll_noise": [-0.0087, 0.0087],  # rad (0.5 deg)
+        # "base_pitch_noise": [-0.0087, 0.0087], # rad (0.5 deg)
 
         # domain randomization
         "domain_rand": {
-            "friction": [0.4, 1.1],         # 地面摩擦係数範囲
-            "restitution": [0.0, 0.2],      # 地面反発係数範囲
-            "kp": [1800.0, 2200.0],       # Pゲイン範囲 +-10%
-            "kd": [25.0, 75.0],          # Dゲイン範囲 +-50%
+            # "friction": [0.4, 1.1],         # 地面摩擦係数範囲
+            # "restitution": [0.0, 0.2],      # 地面反発係数範囲
+            # "kp": [1800.0, 2200.0],       # Pゲイン範囲 +-10%
+            # "kd": [25.0, 75.0],          # Dゲイン範囲 +-50%
         },
     }
     obs_cfg = {
