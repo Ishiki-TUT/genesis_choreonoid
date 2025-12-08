@@ -23,12 +23,16 @@ COLORS = {
     # 追加: トルク
     'genesis_torque': '#17becf',       # ティール
     'choreonoid_torque': '#e377c2',    # ピンク
+    # 位相図用
+    'genesis_phase': '#1f77b4',        # 青
+    'choreonoid_phase': '#d62728',     # 赤
 }
 
 PLOT_CONFIG = {
     'figsize_large': (20, 15),
     'figsize_medium': (15, 12),
     'figsize_wide': (16, 12),
+    'figsize_phase': (20, 15), # 位相図用サイズ
     'dpi': 300,
     'alpha_line': 0.8,
     'alpha_grid': 0.3,
@@ -88,25 +92,13 @@ def extract_obs_components(genesis_df, cnoid_df):
     genesis_torque = np.array([genesis_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
     cnoid_torque = np.array([cnoid_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
 
-    # # Torques (torque_0~11) — 存在チェックして読込
-    # torque_cols = [f"torque_{i}" for i in range(12)]
-    # has_g_torque = all((c in genesis_df.columns) for c in torque_cols)
-    # has_c_torque = all((c in cnoid_df.columns) for c in torque_cols)
-    # if has_g_torque and has_c_torque:
-    #     # 数値化してNaNを補間→0埋め
-    #     for col in torque_cols:
-    #         genesis_df[col] = pd.to_numeric(genesis_df[col], errors="coerce")
-    #         cnoid_df[col]   = pd.to_numeric(cnoid_df[col],   errors="coerce")
-    #     genesis_df[torque_cols] = genesis_df[torque_cols].fillna(method="ffill").fillna(0.0)
-    #     cnoid_df[torque_cols]   = cnoid_df[torque_cols].fillna(method="ffill").fillna(0.0)
+    # dof_pos
+    genesis_dof_pos_full = np.array([genesis_df[f'dof_pos_{i}'].iloc[:min_steps] for i in range(12)]).T
+    cnoid_dof_pos_full = np.array([cnoid_df[f'dof_pos_{i}'].iloc[:min_steps] for i in range(12)]).T
 
-    #     min_steps = min(len(genesis_df), len(cnoid_df))
-    #     genesis_torque = np.array([genesis_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
-    #     cnoid_torque   = np.array([cnoid_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
-    # else:
-    #     genesis_torque = None
-    #     cnoid_torque = None
-    #     print("Info: torque_0..11 columns not found in one or both CSVs. Skipping torque plots.")
+    # dof_vel
+    genesis_dof_vel_full = np.array([genesis_df[f'dof_vel_{i}'].iloc[:min_steps] for i in range(12)]).T
+    cnoid_dof_vel_full = np.array([cnoid_df[f'dof_vel_{i}'].iloc[:min_steps] for i in range(12)]).T
 
     return {
         'genesis_ang_vel': genesis_ang_vel,
@@ -119,6 +111,10 @@ def extract_obs_components(genesis_df, cnoid_df):
         'cnoid_actions': cnoid_actions,
         'genesis_torque': genesis_torque,
         'cnoid_torque': cnoid_torque,
+        'genesis_dof_pos_full': genesis_dof_pos_full,
+        'cnoid_dof_pos_full': cnoid_dof_pos_full,
+        'genesis_dof_vel_full': genesis_dof_vel_full,
+        'cnoid_dof_vel_full': cnoid_dof_vel_full,
     }
 
 def plot_base_ang_vel_comparison(data):
@@ -505,6 +501,46 @@ def plot_difference_analysis(data):
     plt.show()
     print("✓ Difference analysis plot saved")
 
+def plot_phase_portraits(data):
+    """位相図のプロット"""
+    genesis_dof_pos = data['genesis_dof_pos_full']
+    cnoid_dof_pos = data['cnoid_dof_pos_full']
+    genesis_dof_vel = data['genesis_dof_vel_full']
+    cnoid_dof_vel = data['cnoid_dof_vel_full']
+    FIXED_YLIM_PHASE = (-1.5, 1.5)  # 位相図の固定範囲設定（必要に応じてNoneに変更可能）
+    FIXED_XLIM_PHASE = (-1.5, 1.5)
+    
+    fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_phase'])
+    axes = axes.flatten()
+    
+    for i in range(12):
+        axes[i].plot(genesis_dof_pos[:, i], genesis_dof_vel[:, i], 
+                    label='Genesis Phase Portrait', 
+                    color=COLORS['genesis_phase'], 
+                    linewidth=2, alpha=0.8)
+        
+        axes[i].plot(cnoid_dof_pos[:, i], cnoid_dof_vel[:, i], 
+                    label='Choreonoid Phase Portrait', 
+                    color=COLORS['choreonoid_phase'], 
+                    linewidth=2, alpha=0.8)
+        
+        axes[i].set_title(f'{JOINT_NAMES[i]} - Phase Portrait', fontsize=12, fontweight='bold')
+        axes[i].set_xlabel('Joint Position [rad]')
+        axes[i].set_ylabel('Joint Velocity [rad/s]')
+        axes[i].legend(fontsize=6)
+        axes[i].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
+        axes[i].set_xlim(FIXED_XLIM_PHASE)
+        axes[i].set_ylim(FIXED_YLIM_PHASE)
+    
+    plt.suptitle('Phase Portraits: Genesis vs Choreonoid\n' + 
+                    'Joint Position vs Joint Velocity', 
+                    fontsize=16, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(f'{OUTPUT_DIR}/phase_portraits.png', 
+                dpi=PLOT_CONFIG['dpi'], bbox_inches='tight')
+    plt.show()
+    print("✓ Phase portraits plot saved")
+
 def print_comprehensive_statistics(data):
     """包括的な統計情報を出力"""
     genesis_ang_vel = data['genesis_ang_vel']
@@ -629,6 +665,7 @@ def main():
         plot_action_comparison,
         plot_comprehensive_comparison,
         plot_difference_analysis,
+        plot_phase_portraits,
     ]
     # トルクがあれば追加
     if data.get('genesis_torque') is not None and data.get('cnoid_torque') is not None:
@@ -650,6 +687,7 @@ def main():
         print("5. action_comparison.png")
         print("6. comprehensive_comparison.png")
         print("7. difference_analysis.png")
+        print("8. phase_portraits.png")
     else:
         print("4. action_comparison.png")
         print("5. comprehensive_comparison.png")

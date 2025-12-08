@@ -15,7 +15,7 @@ import genesis as gs
 
 from bp000_env_gs import BP000EnvGenesis as RLEnv
 
-def save_simple_csv(step_data, obs_data, exp_name, ckpt, torque_data=None, action_scale=1.0):
+def save_simple_csv(step_data, obs_data, exp_name, ckpt, torque_data=None, dof_pos_data=None, dof_vel_data=None, action_scale=1.0):
     """CSVファイルにデータを保存する関数"""
     if not step_data:
         print("データがありません")
@@ -35,7 +35,21 @@ def save_simple_csv(step_data, obs_data, exp_name, ckpt, torque_data=None, actio
         for i in range(tq_array.shape[1]):
             data_dict[f'torque_{i}'] = tq_array[:, i]
     
+    # ★追加: 関節角度 (dof_pos)
+    if dof_pos_data is not None and len(dof_pos_data) > 0:
+        pos_array = np.array(dof_pos_data)
+        for i in range(pos_array.shape[1]):
+            data_dict[f'dof_pos_{i}'] = pos_array[:, i]
+
+    # ★追加: 関節角速度 (dof_vel)
+    if dof_vel_data is not None and len(dof_vel_data) > 0:
+        vel_array = np.array(dof_vel_data)
+        for i in range(vel_array.shape[1]):
+            data_dict[f'dof_vel_{i}'] = vel_array[:, i]
+
     df = pd.DataFrame(data_dict)
+
+    
     
     # obs_dataディレクトリを作成
     os.makedirs('obs_data', exist_ok=True)
@@ -128,12 +142,20 @@ def eval_policy_with_data_collection(env, policy, args):
     step_data = []
     obs_data = []
     torque_data = []
+    dof_pos_data = []
+    dof_vel_data = []
 
     obs, _ = env.reset()
     cnt = 0
+
+    current_dof_pos = env.dof_pos[0].cpu().numpy() 
+    current_dof_vel = env.dof_vel[0].cpu().numpy()
+
     step_data.append(cnt)
     obs_data.append(_obs_vec(obs))
     torque_data.append(_read_torques(env))
+    dof_pos_data.append(current_dof_pos)
+    dof_vel_data.append(current_dof_vel)
 
     print(f"データ収集開始: {args.steps} ステップ")
 
@@ -142,11 +164,15 @@ def eval_policy_with_data_collection(env, policy, args):
             actions = policy(obs)
             actions = actions * args.action_scale
             obs, rews, dones, infos = env.step(actions)
+            current_dof_pos = env.dof_pos[0].cpu().numpy() 
+            current_dof_vel = env.dof_vel[0].cpu().numpy()
 
             cnt += 1
             step_data.append(cnt)
             obs_data.append(_obs_vec(obs))
             torque_data.append(_read_torques(env))
+            dof_pos_data.append(current_dof_pos)
+            dof_vel_data.append(current_dof_vel)
 
             if i % 20 == 0:
                 print(f"Step {i+1}/{args.steps}, Total steps: {cnt}")
@@ -157,11 +183,13 @@ def eval_policy_with_data_collection(env, policy, args):
                 step_data.append(cnt)
                 obs_data.append(_obs_vec(obs))
                 torque_data.append(_read_torques(env))
+                dof_pos_data.append(current_dof_pos)
+                dof_vel_data.append(current_dof_vel)
 
     print(f"データ収集完了: {len(step_data)} rows")
 
     # CSVファイルに保存（トルク付き）
-    df = save_simple_csv(step_data, obs_data, args.exp_name, args.ckpt, torque_data, args.action_scale)
+    df = save_simple_csv(step_data, obs_data, args.exp_name, args.ckpt, torque_data, dof_pos_data, dof_vel_data, args.action_scale)
     return df
 
 def eval_policy_continuous(env, policy, args):
@@ -185,10 +213,10 @@ if __name__ == "__main__":
     env, policy, args = main()
     
     # データ収集付き評価を実行
-    # df = eval_policy_with_data_collection(env, policy, args)
+    df = eval_policy_with_data_collection(env, policy, args)
     
     # 必要に応じて連続評価も実行
-    eval_policy_continuous(env, policy, args)
+    # eval_policy_continuous(env, policy, args)
 
 """
 # 使用例:
