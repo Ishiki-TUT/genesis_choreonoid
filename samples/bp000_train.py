@@ -135,17 +135,17 @@ def get_cfgs():
         "substeps": 10,
         "rotorInertia": 0.1,
         # noise settings
-        "base_roll_noise": [-0.00, 0.00],  # rad (0.5 deg)
-        "base_pitch_noise": [-0.00, 0.00], # rad (0.5 deg)
-        # "base_roll_noise": [-0.0087, 0.0087],  # rad (0.5 deg)
-        # "base_pitch_noise": [-0.0087, 0.0087], # rad (0.5 deg)
+        # "base_roll_noise": [-0.00, 0.00],  # rad (0.5 deg)
+        # "base_pitch_noise": [-0.00, 0.00], # rad (0.5 deg)
+        "base_roll_noise": [-0.0087, 0.0087],  # rad (0.5 deg)
+        "base_pitch_noise": [-0.0087, 0.0087], # rad (0.5 deg)
 
         # domain randomization
         "domain_rand": {
-            # "friction": [0.4, 1.1],         # 地面摩擦係数範囲
-            # "restitution": [0.0, 0.2],      # 地面反発係数範囲
-            # "kp": [1800.0, 2200.0],       # Pゲイン範囲 +-10%
-            # "kd": [25.0, 75.0],          # Dゲイン範囲 +-50%
+            "friction": [0.4, 1.1],         # 地面摩擦係数範囲
+            "restitution": [0.0, 0.2],      # 地面反発係数範囲
+            "kp": [1800.0, 2200.0],       # Pゲイン範囲 +-10%
+            "kd": [25.0, 75.0],          # Dゲイン範囲 +-50%
         },
     }
     obs_cfg = {
@@ -157,50 +157,50 @@ def get_cfgs():
             "dof_vel": 0.05,
         },
     }
-    # reward_cfg = {
-    #     "tracking_sigma": 0.25,
-    #     "base_height_target": 0.64,
-    #     "feet_height_target": 0.075,
-    #     "reward_scales": {
-    #         "tracking_lin_vel": 8.0, # 2.0
-    #         "tracking_ang_vel": 0.8, # 0.4
-    #         "lin_vel_z": -2.0,
-    #         "base_height": -10.0, # -50.0
-    #         "action_rate": -0.02,  # -0.005
-    #         "similar_to_default": -0.1,
-    #         # "effort": 0.01,
-    #         # "tracking_error": -0.1,
-    #         "episode_len": 0.05, # 0.01
-    #         "correct_action": 0.05, # 0.01
-    #         # "min_ankle_height": 1.0, #10.0
-    #         "plus_watt": 0.05, # -0.01
-    #         "ankle_regularization": -0.001,
-    #         "feet_stride": 0.0, # 1.0
-    #         "hip_pitch_motion": 0.1, # 0.1
-    #         "feet_alternating_pos": 2.0, # 5.0
-    #         # "feet_pos_symmetry": -1.0,
-    #         "feet_air_time": 3.0,      # 足を浮かせることを強く推奨
-    #     },
-    # }
-
     reward_cfg = {
         "tracking_sigma": 0.25,
         "base_height_target": 0.64,
         "feet_height_target": 0.075,
         "reward_scales": {
-            "tracking_lin_vel": 2.0,
-            "tracking_ang_vel": 0.4,
-            "lin_vel_z": -1.0,
-            "base_height": -50.0,
-            "action_rate": -0.005,
+            "tracking_lin_vel": 8.0, # 2.0
+            "tracking_ang_vel": 0.8, # 0.4
+            "lin_vel_z": -2.0,
+            "base_height": -10.0, # -50.0
+            "action_rate": -0.01,  # -0.005
             "similar_to_default": -0.1,
             # "effort": 0.01,
             # "tracking_error": -0.1,
-            "episode_len": 0.01,
-            "correct_action": 0.01,
-            "min_ankle_height": 1,
+            "episode_len": 0.02, # 0.01
+            "correct_action": 0.05, # 0.01
+            # "min_ankle_height": 1.0, #10.0
+            "plus_watt": 0.05, # -0.01
+            "ankle_regularization": -0.001,
+            "feet_stride": 0.0, # 1.0
+            "hip_pitch_motion": 0.1, # 0.1
+            "feet_alternating_pos": 2.0, # 5.0
+            # "feet_pos_symmetry": -1.0,
+            "feet_air_time": 3.0,      # 足を浮かせることを強く推奨
         },
     }
+
+    # reward_cfg = {
+    #     "tracking_sigma": 0.25,
+    #     "base_height_target": 0.64,
+    #     "feet_height_target": 0.075,
+    #     "reward_scales": {
+    #         "tracking_lin_vel": 2.0,
+    #         "tracking_ang_vel": 0.4,
+    #         "lin_vel_z": -1.0,
+    #         "base_height": -50.0,
+    #         "action_rate": -0.005,
+    #         "similar_to_default": -0.1,
+    #         # "effort": 0.01,
+    #         # "tracking_error": -0.1,
+    #         "episode_len": 0.01,
+    #         "correct_action": 0.01,
+    #         "min_ankle_height": 1,
+    #     },
+    # }
 
     # リドさんリワード設定
     # reward_cfg = {

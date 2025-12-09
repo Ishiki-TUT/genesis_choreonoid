@@ -161,5 +161,5 @@ class RLEnvGenesis(RLEnvBase):
         self.robot.zero_all_dofs_velocity(envs_idx)
 
         # --- Domain Randomization の適用 ---
-        # if hasattr(self, "randomize_domain_parameters"):
-        #     self.randomize_domain_parameters(envs_idx)
+        if hasattr(self, "randomize_domain_parameters"):
+            self.randomize_domain_parameters(envs_idx)
