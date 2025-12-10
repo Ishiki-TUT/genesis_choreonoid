@@ -20,12 +20,19 @@ COLORS = {
     'choreonoid_ang_vel': '#d62728',   # 赤系
     'choreonoid_dof_pos': '#9467bd',   # 紫系
     'choreonoid_action': '#8c564b',    # 茶系
+    'norand_ang_vel': '#7f7f7f',       # グレー系
+    'norand_dof_pos': '#bcbd22',       # 黄系
+    'norand_dof_vel': '#17becf',       # ティール系
+    'norand_actions': '#ffbb78',      # ライトオレンジ系
+    'norand_action': '#17becf',        # ティール
     # 追加: トルク
     'genesis_torque': '#17becf',       # ティール
     'choreonoid_torque': '#e377c2',    # ピンク
+    'norand_torque': '#ffbb78',        # ライトオレンジ
     # 位相図用
     'genesis_phase': '#1f77b4',        # 青
     'choreonoid_phase': '#d62728',     # 赤
+    'norand_phase': '#7f7f7f',         # グレー
 }
 
 PLOT_CONFIG = {
@@ -46,16 +53,19 @@ def load_data():
     """データ読み込み"""
     print("Loading data...")
     # genesis_df = pd.read_csv('obs_data/genesis_ishiki-walking-no-vel_ckpt2000_simple.csv')
-    genesis_df = pd.read_csv('obs_data/genesis_friction-walking-terrain2-kp2000kd50-kpkdrand-8_ckpt100_scale1.0.csv')
+    genesis_df = pd.read_csv('obs_data/genesis_friction-walking-terrain2-kp2000kd50-kpkdrand-28_ckpt100_scale1.0.csv')
     # cnoid_df = pd.read_csv('obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_scale1.0.csv')
-    cnoid_df = pd.read_csv('obs_data/cnoid_friction-walking-terrain2-kp2000kd50-kpkdrand-8_ckpt100_scale1.0_rotorInertia0.1.csv')
+    cnoid_df = pd.read_csv('obs_data/cnoid_friction-walking-terrain2-kp2000kd50-kpkdrand-28_ckpt100_scale1.0_rotorInertia0.1.csv')
+    # norand_df = pd.read_csv('obs_data/norand_ishiki-walking-no-vel_ckpt2000_scale1.0.csv')
+    norand_df = pd.read_csv('obs_data/cnoid_friction-walking-terrain1-kp2000kd50-kpkdrand-26-norand_ckpt100_scale1.0_rotorInertia0.1.csv')
 
     print(f"Genesis data shape: {genesis_df.shape}")
     print(f"Choreonoid data shape: {cnoid_df.shape}")
-    
-    return genesis_df, cnoid_df
+    print(f"No-Rand data shape: {norand_df.shape}")
 
-def extract_obs_components(genesis_df, cnoid_df):
+    return genesis_df, cnoid_df, norand_df
+
+def extract_obs_components(genesis_df, cnoid_df, norand_df):
     """
     観測値の各成分を抽出
     観測値の構造:
@@ -75,53 +85,68 @@ def extract_obs_components(genesis_df, cnoid_df):
     # Base angular velocity (obs_0~2)
     genesis_ang_vel = np.array([genesis_df[f'obs_{i}'].iloc[:min_steps] for i in range(3)]).T
     cnoid_ang_vel = np.array([cnoid_df[f'obs_{i}'].iloc[:min_steps] for i in range(3)]).T
+    norand_ang_vel = np.array([norand_df[f'obs_{i}'].iloc[:min_steps] for i in range(3)]).T
 
     # Joint positions (obs_9~20)
     genesis_dof_pos = np.array([genesis_df[f'obs_{9+i}'].iloc[:min_steps] for i in range(12)]).T
     cnoid_dof_pos = np.array([cnoid_df[f'obs_{9+i}'].iloc[:min_steps] for i in range(12)]).T
+    norand_dof_pos = np.array([norand_df[f'obs_{9+i}'].iloc[:min_steps] for i in range(12)]).T
 
     # Joint velocities (obs_21~32)
     genesis_dof_vel = np.array([genesis_df[f'obs_{21+i}'].iloc[:min_steps] for i in range(12)]).T
     cnoid_dof_vel = np.array([cnoid_df[f'obs_{21+i}'].iloc[:min_steps] for i in range(12)]).T
+    norand_dof_vel = np.array([norand_df[f'obs_{21+i}'].iloc[:min_steps] for i in range(12)]).T
 
     # Actions (obs_33~44)
     genesis_actions = np.array([genesis_df[f'obs_{33+i}'].iloc[:min_steps] for i in range(12)]).T
     cnoid_actions = np.array([cnoid_df[f'obs_{33+i}'].iloc[:min_steps] for i in range(12)]).T
+    norand_actions = np.array([norand_df[f'obs_{33+i}'].iloc[:min_steps] for i in range(12)]).T
 
     # Torques (torque_0~11)
     genesis_torque = np.array([genesis_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
     cnoid_torque = np.array([cnoid_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
+    norand_torque = np.array([norand_df[f'torque_{i}'].iloc[:min_steps] for i in range(12)]).T
 
     # dof_pos
     genesis_dof_pos_full = np.array([genesis_df[f'dof_pos_{i}'].iloc[:min_steps] for i in range(12)]).T
     cnoid_dof_pos_full = np.array([cnoid_df[f'dof_pos_{i}'].iloc[:min_steps] for i in range(12)]).T
+    norand_dof_pos_full = np.array([norand_df[f'dof_pos_{i}'].iloc[:min_steps] for i in range(12)]).T
 
     # dof_vel
     genesis_dof_vel_full = np.array([genesis_df[f'dof_vel_{i}'].iloc[:min_steps] for i in range(12)]).T
     cnoid_dof_vel_full = np.array([cnoid_df[f'dof_vel_{i}'].iloc[:min_steps] for i in range(12)]).T
+    norand_dof_vel_full = np.array([norand_df[f'dof_vel_{i}'].iloc[:min_steps] for i in range(12)]).T
 
     return {
         'genesis_ang_vel': genesis_ang_vel,
         'cnoid_ang_vel': cnoid_ang_vel,
+        'norand_ang_vel': norand_ang_vel,
         'genesis_dof_pos': genesis_dof_pos,
         'cnoid_dof_pos': cnoid_dof_pos,
+        'norand_dof_pos': norand_dof_pos,
         'genesis_dof_vel': genesis_dof_vel,
         'cnoid_dof_vel': cnoid_dof_vel,
+        'norand_dof_vel': norand_dof_vel,
         'genesis_actions': genesis_actions,
         'cnoid_actions': cnoid_actions,
+        'norand_actions': norand_actions,
         'genesis_torque': genesis_torque,
         'cnoid_torque': cnoid_torque,
+        'norand_torque': norand_torque,
         'genesis_dof_pos_full': genesis_dof_pos_full,
         'cnoid_dof_pos_full': cnoid_dof_pos_full,
+        'norand_dof_pos_full': norand_dof_pos_full,
         'genesis_dof_vel_full': genesis_dof_vel_full,
         'cnoid_dof_vel_full': cnoid_dof_vel_full,
+        'norand_dof_vel_full': norand_dof_vel_full,
     }
 
 def plot_base_ang_vel_comparison(data):
     """Base Angular Velocity比較 (obs_0~2)"""
     genesis_ang_vel = data['genesis_ang_vel']
     cnoid_ang_vel = data['cnoid_ang_vel']
-    
+    norand_ang_vel = data['norand_ang_vel']
+
     steps = np.arange(len(genesis_ang_vel))
     
     fig, axes = plt.subplots(1, 3, figsize=PLOT_CONFIG['figsize_wide'])
@@ -139,7 +164,14 @@ def plot_base_ang_vel_comparison(data):
                     color=COLORS['choreonoid_ang_vel'],
                     linewidth=PLOT_CONFIG['linewidth'],
                     alpha=PLOT_CONFIG['alpha_line'])
-        
+
+        axes[i].plot(steps, norand_ang_vel[:, i], 
+                    label='No-Rand', 
+                    color=COLORS['norand_ang_vel'],
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'],
+                    linestyle='--')
+
         axes[i].set_title(f'{ang_vel_names[i]} (obs_{i})', fontsize=12, fontweight='bold')
         axes[i].set_xlabel('Time Step')
         axes[i].set_ylabel('Angular Velocity [rad/s]')
@@ -149,9 +181,10 @@ def plot_base_ang_vel_comparison(data):
         # 統計情報を表示
         g_mean = np.mean(genesis_ang_vel[:, i])
         c_mean = np.mean(cnoid_ang_vel[:, i])
+        n_mean = np.mean(norand_ang_vel[:, i])
         diff_mean = np.mean(np.abs(genesis_ang_vel[:, i] - cnoid_ang_vel[:, i]))
-        
-        axes[i].text(0.02, 0.98, f'G_avg: {g_mean:.4f}\nC_avg: {c_mean:.4f}\nDiff: {diff_mean:.4f}', 
+
+        axes[i].text(0.02, 0.98, f'G_avg: {g_mean:.4f}\nC_avg: {c_mean:.4f}\nN_avg: {n_mean:.4f}\nDiff: {diff_mean:.4f}', 
                     transform=axes[i].transAxes, 
                     verticalalignment='top',
                     bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8),
@@ -169,7 +202,8 @@ def plot_dof_pos_comparison(data):
     """Joint Position比較 (obs_9~20)"""
     genesis_dof_pos = data['genesis_dof_pos']
     cnoid_dof_pos = data['cnoid_dof_pos']
-    
+    norand_dof_pos = data['norand_dof_pos']
+
     steps = np.arange(len(genesis_dof_pos))
     
     fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
@@ -188,6 +222,14 @@ def plot_dof_pos_comparison(data):
                     color=COLORS['choreonoid_dof_pos'],
                     linewidth=PLOT_CONFIG['linewidth'],
                     alpha=PLOT_CONFIG['alpha_line'])
+
+        axes[i].plot(steps, norand_dof_pos[:, i], 
+                    label='No-Rand', 
+                    color=COLORS['norand_dof_pos'],
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'],
+                    linestyle='--')
+
         
         axes[i].set_title(f'{JOINT_NAMES[i]} Position (obs_{9+i})', 
                          fontsize=12, fontweight='bold')
@@ -200,9 +242,10 @@ def plot_dof_pos_comparison(data):
         # 統計情報を表示
         g_mean = np.mean(genesis_dof_pos[:, i])
         c_mean = np.mean(cnoid_dof_pos[:, i])
+        n_mean = np.mean(norand_dof_pos[:, i])
         diff_mean = np.mean(np.abs(genesis_dof_pos[:, i] - cnoid_dof_pos[:, i]))
-        
-        axes[i].text(0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nΔ: {diff_mean:.4f}', 
+
+        axes[i].text(0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nN: {n_mean:.3f}\nΔ: {diff_mean:.4f}', 
                     transform=axes[i].transAxes, 
                     verticalalignment='top',
                     bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8),
@@ -220,7 +263,8 @@ def plot_dof_vel_comparison(data):
     """Joint Velocity比較 (obs_21~32)"""
     genesis_dof_vel = data['genesis_dof_vel']
     cnoid_dof_vel = data['cnoid_dof_vel']
-    
+    norand_dof_vel = data['norand_dof_vel']
+
     steps = np.arange(len(genesis_dof_vel))
     
     fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
@@ -239,7 +283,14 @@ def plot_dof_vel_comparison(data):
                     color=COLORS['choreonoid_ang_vel'],
                     linewidth=PLOT_CONFIG['linewidth'],
                     alpha=PLOT_CONFIG['alpha_line'])
-        
+
+        axes[i].plot(steps, norand_dof_vel[:, i], 
+                    label='No-Rand', 
+                    color=COLORS['norand_dof_vel'],
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'],
+                    linestyle='--')
+
         axes[i].set_title(f'{JOINT_NAMES[i]} Velocity (obs_{21+i})', 
                          fontsize=12, fontweight='bold')
         axes[i].set_xlabel('Time Step')
@@ -251,9 +302,10 @@ def plot_dof_vel_comparison(data):
         # 統計情報を表示
         g_mean = np.mean(genesis_dof_vel[:, i])
         c_mean = np.mean(cnoid_dof_vel[:, i])
+        n_mean = np.mean(norand_dof_vel[:, i])
         diff_mean = np.mean(np.abs(genesis_dof_vel[:, i] - cnoid_dof_vel[:, i]))
-        
-        axes[i].text(0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nΔ: {diff_mean:.4f}', 
+
+        axes[i].text(0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nN: {n_mean:.3f}\nΔ: {diff_mean:.4f}', 
                     transform=axes[i].transAxes, 
                     verticalalignment='top',
                     bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8),
@@ -271,7 +323,8 @@ def plot_action_comparison(data):
     """Action値比較 (obs_33~44)"""
     genesis_actions = data['genesis_actions']
     cnoid_actions = data['cnoid_actions']
-    
+    norand_actions = data['norand_actions']
+
     steps = np.arange(len(genesis_actions))
     
     fig, axes = plt.subplots(3, 4, figsize=PLOT_CONFIG['figsize_large'])
@@ -290,7 +343,14 @@ def plot_action_comparison(data):
                     color=COLORS['choreonoid_action'],
                     linewidth=PLOT_CONFIG['linewidth'],
                     alpha=PLOT_CONFIG['alpha_line'])
-        
+
+        axes[i].plot(steps, norand_actions[:, i], 
+                    label='No-Rand', 
+                    color=COLORS['norand_actions'],
+                    linewidth=PLOT_CONFIG['linewidth'],
+                    alpha=PLOT_CONFIG['alpha_line'],
+                    linestyle='--')
+
         axes[i].set_ylim(FIXED_YLIM)  # 固定範囲を適用
         
         axes[i].set_title(f'{JOINT_NAMES[i]} Action (obs_{33+i})', 
@@ -303,9 +363,10 @@ def plot_action_comparison(data):
         # 統計情報を表示
         g_mean = np.mean(genesis_actions[:, i])
         c_mean = np.mean(cnoid_actions[:, i])
+        n_mean = np.mean(norand_actions[:, i])
         diff_mean = np.mean(np.abs(genesis_actions[:, i] - cnoid_actions[:, i]))
-        
-        axes[i].text(0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nΔ: {diff_mean:.4f}', 
+
+        axes[i].text(0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nN: {n_mean:.3f}\nΔ: {diff_mean:.4f}', 
                     transform=axes[i].transAxes, 
                     verticalalignment='top',
                     bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8),
@@ -323,7 +384,8 @@ def plot_torque_comparison(data):
     """Torque比較 (torque_0~11)"""
     genesis_torque = data.get('genesis_torque', None)
     cnoid_torque = data.get('cnoid_torque', None)
-    if genesis_torque is None or cnoid_torque is None:
+    norand_torque = data.get('norand_torque', None)
+    if genesis_torque is None or cnoid_torque is None or norand_torque is None:
         print("Skip torque comparison (no torque columns).")
         return
 
@@ -343,6 +405,12 @@ def plot_torque_comparison(data):
             label='Choreonoid', color=COLORS['choreonoid_torque'],
             linewidth=PLOT_CONFIG['linewidth'], alpha=PLOT_CONFIG['alpha_line'],
         )
+        axes[i].plot(
+            steps, norand_torque[:, i],
+            label='No-Rand', color=COLORS['norand_torque'],
+            linewidth=PLOT_CONFIG['linewidth'], alpha=PLOT_CONFIG['alpha_line'],
+            linestyle='--',
+        )
         axes[i].set_title(f'{JOINT_NAMES[i]} Torque', fontsize=12, fontweight='bold')
         axes[i].set_xlabel('Time Step')
         axes[i].set_ylabel('Torque [Nm]')
@@ -353,9 +421,10 @@ def plot_torque_comparison(data):
         # 統計情報
         g_mean = np.mean(genesis_torque[:, i])
         c_mean = np.mean(cnoid_torque[:, i])
+        n_mean = np.mean(norand_torque[:, i])
         diff_mean = np.mean(np.abs(genesis_torque[:, i] - cnoid_torque[:, i]))
         axes[i].text(
-            0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nΔ: {diff_mean:.4f}',
+            0.02, 0.98, f'G: {g_mean:.3f}\nC: {c_mean:.3f}\nN: {n_mean:.3f}\nΔ: {diff_mean:.4f}',
             transform=axes[i].transAxes, verticalalignment='top',
             bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8),
             fontsize=8,
@@ -373,11 +442,14 @@ def plot_comprehensive_comparison(data):
     """包括的比較：各関節について3つの要素を同時表示"""
     genesis_dof_pos = data['genesis_dof_pos']
     cnoid_dof_pos = data['cnoid_dof_pos']
+    norand_dof_pos = data['norand_dof_pos']
     genesis_dof_vel = data['genesis_dof_vel']
     cnoid_dof_vel = data['cnoid_dof_vel']
+    norand_dof_vel = data['norand_dof_vel']
     genesis_actions = data['genesis_actions']
     cnoid_actions = data['cnoid_actions']
-    
+    norand_actions = data['norand_actions']
+
     steps = np.arange(len(genesis_dof_pos))
     
     # 最初の4関節について詳細比較
@@ -396,6 +468,9 @@ def plot_comprehensive_comparison(data):
         axes[joint_idx, 0].plot(steps, cnoid_dof_pos[:, joint_idx], 
                                label='Choreonoid', color=COLORS['choreonoid_dof_pos'], 
                                linewidth=2, alpha=0.8)
+        axes[joint_idx, 0].plot(steps, norand_dof_pos[:, joint_idx], 
+                               label='No-Rand', color=COLORS['norand_dof_pos'], 
+                               linewidth=2, alpha=0.8)
         axes[joint_idx, 0].set_title(f'{joint_name} - Position')
         axes[joint_idx, 0].set_ylabel('Position [rad]')
         axes[joint_idx, 0].legend(fontsize=8)
@@ -409,6 +484,10 @@ def plot_comprehensive_comparison(data):
         axes[joint_idx, 1].plot(steps, cnoid_dof_vel[:, joint_idx], 
                                label='Choreonoid', color=COLORS['choreonoid_ang_vel'], 
                                linewidth=2, alpha=0.8)
+        axes[joint_idx, 1].plot(steps, norand_dof_vel[:, joint_idx], 
+                               label='No-Rand', color=COLORS['norand_dof_vel'], 
+                               linewidth=2, alpha=0.8)
+
         axes[joint_idx, 1].set_title(f'{joint_name} - Velocity')
         axes[joint_idx, 1].set_ylabel('Velocity [rad/s]')
         axes[joint_idx, 1].legend(fontsize=8)
@@ -422,6 +501,11 @@ def plot_comprehensive_comparison(data):
         axes[joint_idx, 2].plot(steps, cnoid_actions[:, joint_idx], 
                                label='Choreonoid', color=COLORS['choreonoid_action'], 
                                linewidth=2, alpha=0.8)
+
+        axes[joint_idx, 2].plot(steps, norand_actions[:, joint_idx], 
+                               label='No-Rand', color=COLORS['norand_action'], 
+                               linewidth=2, alpha=0.8)
+
         axes[joint_idx, 2].set_title(f'{joint_name} - Action')
         axes[joint_idx, 2].set_ylabel('Action Value')
         axes[joint_idx, 2].legend(fontsize=8)
@@ -446,14 +530,19 @@ def plot_difference_analysis(data):
     """差分分析：各要素の差分を可視化"""
     genesis_dof_pos = data['genesis_dof_pos']
     cnoid_dof_pos = data['cnoid_dof_pos']
+    norand_dof_pos = data['norand_dof_pos']
     genesis_dof_vel = data['genesis_dof_vel']
     cnoid_dof_vel = data['cnoid_dof_vel']
+    norand_dof_vel = data['norand_dof_vel']
     genesis_actions = data['genesis_actions']
     cnoid_actions = data['cnoid_actions']
-    
+    norand_actions = data['norand_actions']
+
     # 差分計算
     pos_diff = np.abs(genesis_dof_pos - cnoid_dof_pos)
     vel_diff = np.abs(genesis_dof_vel - cnoid_dof_vel)
+    norand_pos_diff = np.abs(genesis_dof_pos - norand_dof_pos)
+    norand_vel_diff = np.abs(genesis_dof_vel - norand_dof_vel)
     action_diff = np.abs(genesis_actions - cnoid_actions)
     
     steps = np.arange(len(pos_diff))
@@ -465,15 +554,21 @@ def plot_difference_analysis(data):
         axes[i].plot(steps, pos_diff[:, i], 
                     label='|Genesis - Choreonoid| Position', 
                     color=COLORS['genesis_dof_pos'], linewidth=2, alpha=0.8)
-        
+        axes[i].plot(steps, norand_pos_diff[:, i], 
+                    label='|Genesis - No-Rand| Position', 
+                    color=COLORS['norand_dof_pos'], linewidth=2, alpha=0.8)
         axes[i].plot(steps, vel_diff[:, i], 
                     label='|Genesis - Choreonoid| Velocity', 
                     color=COLORS['genesis_ang_vel'], linewidth=2, alpha=0.8)
-        
+        axes[i].plot(steps, norand_vel_diff[:, i], 
+                    label='|Genesis - No-Rand| Velocity', 
+                    color=COLORS['norand_ang_vel'], linewidth=2, alpha=0.8)
         axes[i].plot(steps, action_diff[:, i], 
                     label='|Genesis - Choreonoid| Action', 
                     color=COLORS['genesis_action'], linewidth=2, alpha=0.8)
-        
+        axes[i].plot(steps, norand_actions[:, i], 
+                    label='|Genesis - No-Rand| Action', 
+                    color=COLORS['norand_action'], linewidth=2, alpha=0.8)
         axes[i].set_title(f'{JOINT_NAMES[i]} - Differences', fontsize=12, fontweight='bold')
         axes[i].set_xlabel('Time Step')
         axes[i].set_ylabel('Absolute Difference')
@@ -485,9 +580,11 @@ def plot_difference_analysis(data):
         pos_mean = np.mean(pos_diff[:, i])
         vel_mean = np.mean(vel_diff[:, i])
         action_mean = np.mean(action_diff[:, i])
-        
+        norand_pos_mean = np.mean(norand_pos_diff[:, i])
+        norand_vel_mean = np.mean(norand_vel_diff[:, i])
+        norand_action_mean = np.mean(norand_actions[:, i])
         axes[i].text(0.02, 0.02, 
-                    f'Pos: {pos_mean:.4f}\nVel: {vel_mean:.4f}\nAct: {action_mean:.4f}', 
+                    f'Pos: {pos_mean:.4f}\nVel: {vel_mean:.4f}\nAct: {action_mean:.4f}\nN: {norand_action_mean:.4f}', 
                     transform=axes[i].transAxes,
                     bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.7),
                     fontsize=8)
@@ -507,6 +604,8 @@ def plot_phase_portraits(data):
     cnoid_dof_pos = data['cnoid_dof_pos_full']
     genesis_dof_vel = data['genesis_dof_vel_full']
     cnoid_dof_vel = data['cnoid_dof_vel_full']
+    norand_dof_pos = data['norand_dof_pos_full']
+    norand_dof_vel = data['norand_dof_vel_full']
     FIXED_YLIM_PHASE = (-1.5, 1.5)  # 位相図の固定範囲設定（必要に応じてNoneに変更可能）
     FIXED_XLIM_PHASE = (-1.5, 1.5)
     
@@ -524,13 +623,17 @@ def plot_phase_portraits(data):
                     color=COLORS['choreonoid_phase'], 
                     linewidth=2, alpha=0.8)
         
+        axes[i].plot(norand_dof_pos[:, i], norand_dof_vel[:, i], 
+                    label='No-Rand Phase Portrait', 
+                    color=COLORS['norand_phase'], 
+                    linewidth=2, alpha=0.8)
         axes[i].set_title(f'{JOINT_NAMES[i]} - Phase Portrait', fontsize=12, fontweight='bold')
         axes[i].set_xlabel('Joint Position [rad]')
         axes[i].set_ylabel('Joint Velocity [rad/s]')
         axes[i].legend(fontsize=6)
         axes[i].grid(True, alpha=PLOT_CONFIG['alpha_grid'])
-        axes[i].set_xlim(FIXED_XLIM_PHASE)
-        axes[i].set_ylim(FIXED_YLIM_PHASE)
+        # axes[i].set_xlim(FIXED_XLIM_PHASE)
+        # axes[i].set_ylim(FIXED_YLIM_PHASE)
     
     plt.suptitle('Phase Portraits: Genesis vs Choreonoid\n' + 
                     'Joint Position vs Joint Velocity', 
@@ -553,7 +656,10 @@ def print_comprehensive_statistics(data):
     cnoid_actions = data['cnoid_actions']
     genesis_torque = data.get('genesis_torque', None)
     cnoid_torque = data.get('cnoid_torque', None)
-    
+    norand_ang_vel = data['norand_ang_vel']
+    norand_dof_pos = data['norand_dof_pos']
+    norand_dof_vel = data['norand_dof_vel']
+    norand_actions = data['norand_actions']
     print("\n" + "="*120)
     print("COMPREHENSIVE OBSERVATION COMPARISON ANALYSIS")
     print("="*120)
@@ -564,9 +670,10 @@ def print_comprehensive_statistics(data):
     for i in range(3):
         g_mean = np.mean(genesis_ang_vel[:, i])
         c_mean = np.mean(cnoid_ang_vel[:, i])
+        n_mean = np.mean(norand_ang_vel[:, i])
         diff_mean = np.mean(np.abs(genesis_ang_vel[:, i] - cnoid_ang_vel[:, i]))
-        print(f"{ang_vel_names[i]:<12} G:{g_mean:>8.4f} C:{c_mean:>8.4f} Diff:{diff_mean:>8.4f}")
-    
+        print(f"{ang_vel_names[i]:<12} G:{g_mean:>8.4f} C:{c_mean:>8.4f} N:{n_mean:>8.4f} Diff:{diff_mean:>8.4f}")
+
     # Joint統計のヘッダー
     print(f"\n--- JOINT ANALYSIS (12 joints) ---")
     print(f"{'Joint':<12} {'G_Pos':<8} {'C_Pos':<8} {'G_Vel':<8} {'C_Vel':<8} {'G_Act':<8} {'C_Act':<8} " +
@@ -577,20 +684,27 @@ def print_comprehensive_statistics(data):
         # 平均値計算
         g_pos_mean = np.mean(genesis_dof_pos[:, i])
         c_pos_mean = np.mean(cnoid_dof_pos[:, i])
+        n_pos_mean = np.mean(norand_dof_pos[:, i])
         g_vel_mean = np.mean(genesis_dof_vel[:, i])
         c_vel_mean = np.mean(cnoid_dof_vel[:, i])
+        n_vel_mean = np.mean(norand_dof_vel[:, i])
         g_act_mean = np.mean(genesis_actions[:, i])
         c_act_mean = np.mean(cnoid_actions[:, i])
-        
+        n_act_mean = np.mean(norand_actions[:, i])
+
         # 差分計算
         pos_diff = np.mean(np.abs(genesis_dof_pos[:, i] - cnoid_dof_pos[:, i]))
         vel_diff = np.mean(np.abs(genesis_dof_vel[:, i] - cnoid_dof_vel[:, i]))
         act_diff = np.mean(np.abs(genesis_actions[:, i] - cnoid_actions[:, i]))
-        
+        norand_pos_diff = np.mean(np.abs(genesis_dof_pos[:, i] - norand_dof_pos[:, i]))
+        norand_vel_diff = np.mean(np.abs(genesis_dof_vel[:, i] - norand_dof_vel[:, i]))
+        norand_act_diff = np.mean(np.abs(genesis_actions[:, i] - norand_actions[:, i]))
+
         print(f"{JOINT_NAMES[i]:<12} {g_pos_mean:<8.3f} {c_pos_mean:<8.3f} " +
               f"{g_vel_mean:<8.3f} {c_vel_mean:<8.3f} {g_act_mean:<8.3f} {c_act_mean:<8.3f} " +
-              f"{pos_diff:<8.4f} {vel_diff:<8.4f} {act_diff:<8.4f}")
-    
+              f"{pos_diff:<8.4f} {vel_diff:<8.4f} {act_diff:<8.4f} " +
+              f"{norand_pos_diff:<8.4f} {norand_vel_diff:<8.4f} {norand_act_diff:<8.4f}")
+
     # 全体統計
     print("\n" + "-"*120)
     print("OVERALL STATISTICS")
@@ -633,6 +747,10 @@ def main():
     parser.add_argument("-cnoid", "--choreonoid-file", type=str,
                         default="obs_data/cnoid_ishiki-walking-no-vel_ckpt2000_simple.csv", 
                         help="Choreonoid data file path")
+    parser.add_argument("-norand", "--norand-file", type=str,
+                        default="obs_data/norand_ishiki-walking-no-vel_ckpt2000_simple.csv",
+                        help="No-Random data file path")
+
     args = parser.parse_args()
     
     # 出力ディレクトリを設定
@@ -654,8 +772,8 @@ def main():
     print("-" * 80)
     
     # データ読み込みと抽出
-    genesis_df, cnoid_df = load_data()
-    data = extract_obs_components(genesis_df, cnoid_df)
+    genesis_df, cnoid_df, norand_df = load_data()
+    data = extract_obs_components(genesis_df, cnoid_df, norand_df)
 
     # 生成するプロット
     plot_functions = [
