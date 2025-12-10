@@ -224,3 +224,86 @@ class BP000EnvGenesis(RLEnvGenesis):
         
         # 5. 和の絶対値をペナルティとして返す
         return torch.abs(sum_x)
+   
+    def _reward_feet_air_time(self):
+            """
+            【滞空時間リワード】
+            足が長く浮いているほど報酬を与える。
+            これにより「すり足」がなくなり、しっかりと足を上げるようになる。
+            """
+            foot_names = self.env_cfg.get("feet_link_names", ["L_ANKLE_R", "R_ANKLE_R"])
+            reward = torch.zeros(self.num_envs, device=self.device)
+            
+            # 指令が出ている（歩く意思がある）時のみ有効
+            cmd_norm = torch.norm(self.commands[:, :2], dim=1)
+            is_moving = (cmd_norm > 0.1).float()
+            
+            for name in foot_names:
+                link = self.robot.get_link(name)
+                z_pos = link.get_pos()[:, 2]
+                
+                # 高さ 2cm 以上なら浮いているとみなす
+                # 浮いている時間(高さ)そのものを報酬にする
+                air_time = (z_pos > 0.02).float()
+                
+                # 高さに応じてボーナス (ただし上限あり)
+                height_reward = torch.clamp(z_pos, max=0.15) 
+                
+                reward += air_time + height_reward
+                
+            return reward * is_moving
+
+    def _reward_feet_pos_symmetry(self):
+        """
+        【左右対称性リワード】
+        ベースから見た左右の足の前後位置の和がゼロになる（対称になる）ことを推奨。
+        片足だけ前に出るのを防ぐ。
+        """
+        foot_names = self.env_cfg.get("feet_link_names", ["L_ANKLE_R", "R_ANKLE_R"])
+        inv_base_quat = self._inv_quat(self.base_quat) # ヘルパー関数または直接計算
+        
+        feet_local_x = []
+        for name in foot_names:
+            link = self.robot.get_link(name)
+            rel_pos = link.get_pos() - self.base_pos
+            # クォータニオン回転計算 (transform_by_quatの実装に依存)
+            # ここでは簡易的に記述
+            local_pos = self._rotate_vec(rel_pos, inv_base_quat) 
+            feet_local_x.append(local_pos[:, 0])
+            
+        if len(feet_local_x) < 2: return 0.0
+        
+        # 左足X + 右足X の絶対値（ゼロに近いほど良い＝ペナルティ）
+        return torch.abs(feet_local_x[0] + feet_local_x[1])
+    
+    def _reward_feet_parallel(self):
+        """【ガニ股・内股防止】"""
+        foot_names = self.env_cfg.get("feet_link_names", ["L_ANKLE_R", "R_ANKLE_R"])
+        
+        # ベースの前方ベクトル(XY平面)
+        from genesis.utils.geom import transform_by_quat
+        forward = torch.tensor([1.0, 0.0, 0.0], device=self.device).expand(self.num_envs, 3)
+        base_fwd = transform_by_quat(forward, self.base_quat)[:, :2]
+        base_fwd = base_fwd / (torch.norm(base_fwd, dim=1, keepdim=True) + 1e-6)
+
+        penalty = 0.0
+        for name in foot_names:
+            link = self.robot.get_link(name)
+            foot_fwd = transform_by_quat(forward, link.get_quat())[:, :2]
+            foot_fwd = foot_fwd / (torch.norm(foot_fwd, dim=1, keepdim=True) + 1e-6)
+            
+            # 内積が1.0(平行)から離れるほどペナルティ
+            dot = torch.sum(base_fwd * foot_fwd, dim=1)
+            penalty += torch.square(1.0 - dot)
+            
+        return penalty # これはペナルティ項なので正の値を返し、係数をマイナスにする
+    
+    def _reward_orientation(self):
+        """
+        【姿勢安定】
+        重力ベクトルがZ軸下向き([0,0,-1])と一致しているか。
+        転倒防止に最も効きます。
+        """
+        # projected_gravityのXY成分（傾き）が大きいほど報酬が下がる
+        gravity_error = torch.sum(torch.square(self.projected_gravity[:, :2]), dim=1)
+        return torch.exp(-gravity_error / 0.05)

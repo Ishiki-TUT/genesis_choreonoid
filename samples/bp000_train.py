@@ -157,72 +157,90 @@ def get_cfgs():
             "dof_vel": 0.05,
         },
     }
-    # reward_cfg = {
-    #     "tracking_sigma": 0.25,
-    #     "base_height_target": 0.64,
-    #     "feet_height_target": 0.075,
-    #     "reward_scales": {
-    #         "tracking_lin_vel": 8.0, # 2.0
-    #         "tracking_ang_vel": 0.8, # 0.4
-    #         "lin_vel_z": -2.0,
-    #         "base_height": -10.0, # -50.0
-    #         "action_rate": -0.01,  # -0.005
-    #         "similar_to_default": -0.1,
-    #         # "effort": 0.01,
-    #         # "tracking_error": -0.1,
-    #         "episode_len": 0.02, # 0.01
-    #         "correct_action": 0.05, # 0.01
-    #         # "min_ankle_height": 1.0, #10.0
-    #         "plus_watt": 0.05, # -0.01
-    #         "ankle_regularization": -0.001,
-    #         "feet_stride": 0.0, # 1.0
-    #         "hip_pitch_motion": 0.1, # 0.1
-    #         "feet_alternating_pos": 2.0, # 5.0
-    #         # "feet_pos_symmetry": -1.0,
-    #         "feet_air_time": 3.0,      # 足を浮かせることを強く推奨
-    #     },
-    # }
-
     reward_cfg = {
         "tracking_sigma": 0.25,
         "base_height_target": 0.64,
         "feet_height_target": 0.075,
         "reward_scales": {
-            "tracking_lin_vel": 2.0,
-            "tracking_ang_vel": 0.4,
-            "lin_vel_z": -1.0,
-            "base_height": -50.0,
-            "action_rate": -0.005,
+            "tracking_lin_vel": 8.0, # 2.0
+            "tracking_ang_vel": 0.8, # 0.4
+            "lin_vel_z": -2.0,
+            "base_height": -10.0, # -50.0
+            "action_rate": -0.01,  # -0.005
             "similar_to_default": -0.1,
             # "effort": 0.01,
             # "tracking_error": -0.1,
-            "episode_len": 0.01,
-            "correct_action": 0.01,
-            "min_ankle_height": 1,
+            "episode_len": 0.02, # 0.01
+            "correct_action": 0.05, # 0.01
+            # "min_ankle_height": 1.0, #10.0
+            "plus_watt": 0.05, # -0.01
+            "ankle_regularization": -0.001,
+            "feet_stride": 0.0, # 1.0
+            "hip_pitch_motion": 0.1, # 0.1
+            "feet_alternating_pos": 2.0, # 5.0
+            # "feet_pos_symmetry": -1.0,
+            "feet_air_time": 3.0,      # 足を浮かせることを強く推奨
         },
     }
 
-    # リドさんリワード設定
     # reward_cfg = {
     #     "tracking_sigma": 0.25,
-    #     # "base_height_target": 0.64,
-    #     "base_height_target": 0.70,
+    #     "base_height_target": 0.64,
     #     "feet_height_target": 0.075,
     #     "reward_scales": {
-    #         "tracking_lin_vel": 1.0,
-    #         "tracking_ang_vel": 0.2,
-    #         # "tracking_lin_vel": 2.0,
-    #         # "tracking_ang_vel": 1.6,
+    #         "tracking_lin_vel": 2.0,
+    #         "tracking_ang_vel": 1.0,
     #         "lin_vel_z": -1.0,
     #         "base_height": -50.0,
     #         "action_rate": -0.005,
-    #         # "action_rate": -0.05,
     #         "similar_to_default": -0.1,
-    #         # "effort": 0.,
+    #         # "effort": 0.01,
     #         # "tracking_error": -0.1,
+    #         "episode_len": 0.01,
+    #         "correct_action": 0.01,
+    #         "min_ankle_height": 1,
     #     },
     # }
 
+    # reward_cfg = {
+    #         # 追従の許容誤差 (Expリワード用)
+    #         "tracking_sigma": 0.25, 
+    #         "base_height_target": 0.64, # ロボットの脚長に合わせて調整
+    #         "feet_height_target": 0.075,
+            
+    #         "reward_scales": {
+    #             # --- 1. 基本動作 (Main) ---
+    #             "tracking_lin_vel": 2.0,   # 前に進む意志 (最優先)
+    #             "tracking_ang_vel": 1.0,   # 回転追従
+
+    #             # --- 2. 姿勢の矯正 (Posture) ---
+    #             # -50.0 は強すぎました。Exp形式にするか、係数を下げます。
+    #             # ここでは扱いやすいExp形式(ガウシアン)を推奨します。
+    #             # 関数がない場合は -2.0 程度に弱めてください。
+    #             "base_height": 1.0,        # 以前の -50.0 (Penalty) -> +1.0 (Reward/Exp) へ変更推奨
+    #             "orientation": 1.0,        # 重力方向の維持 (転倒防止)
+
+    #             # --- 3. 人間らしさの核 (Gait Quality) ---
+    #             # ★これが最重要です。足を「運ぶ」動作を作ります。
+    #             "feet_air_time": 2.0,      # 足を長く浮かせる -> 歩幅が伸びる
+                
+    #             # --- 4. 省エネ・滑らかさ (Smoothness) ---
+    #             # CSVのトルク飽和(200/-200)を防ぐため、ここを強化します。
+    #             "torques": -0.0002,        # 無駄な力みを罰する (必須)
+    #             "action_rate": -0.01,      # -0.005 -> -0.01 に倍増して振動抑制
+    #             "dof_vel": -0.001,         # 関節を早く動かしすぎるのを防ぐ
+    #             "dof_acc": -2.5e-7,        # 急加速(ガタツキ)を防ぐ
+
+    #             # --- 5. 形状の補正 ---
+    #             "feet_parallel": -0.5,     # ガニ股防止
+    #             # "dof_pos_limits": -1.0,    # 関節可動域の限界に当たるのを防ぐ
+
+    #             # --- 削除/変更した項目 ---
+    #             # "lin_vel_z": -1.0,       # 上下動抑制は base_height があれば弱くてOK (-0.5程度へ)
+    #             # "min_ankle_height": 0.0, # これが足を上げすぎて不安定にさせている可能性大 -> 削除推奨
+    #         },
+    #     }
+    
     command_cfg = {
         "num_commands": 3,
         "lin_vel_x_range": [0.5, 0.5], # [0.5, 0.5]

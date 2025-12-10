@@ -301,35 +301,16 @@ class RLEnvBase:
         """
         # self.dof_vel は (num_envs, num_dof) の形
         return torch.sum(torch.square(self.dof_vel), dim=1)
-
-    # --------------------------------------------------------------------------------
-    # Gait / Contact Rewards (論文のPattern Generation要素)
-    # --------------------------------------------------------------------------------
-
-    def _reward_feet_air_time(self):
-        """
-        【滞空時間リワード】
-        論文にあるような「歩行パターン」を生成する核となるリワード。
-        「指令が出ている間は、足を長く浮かせなさい」という指示。
-        これにより、バタバタ足踏みせず、しっかり歩くようになる。
-        """
-        # 接地判定（高さベース簡易版）
-        foot_names = self.env_cfg.get("feet_link_names", ["L_ANKLE_R", "R_ANKLE_R"])
-        reward = torch.zeros(self.num_envs, device=self.device)
-        
-        # 指令速度が出ているか (歩行中のみ有効)
-        cmd_norm = torch.norm(self.commands[:, :2], dim=1)
-        is_moving = cmd_norm > 0.1
-        
-        for name in foot_names:
-            link = self.robot.get_link(name)
-            z_pos = link.get_pos()[:, 2]
-            
-            # 足が浮いている時間(高さ)を評価
-            # 高さ 2cm 以上を滞空とみなす
-            air = (z_pos > 0.02).float()
-            
-            # 浮いているなら報酬 (上限あり)
-            reward += air * 1.0 
-            
-        return reward * is_moving.float()
+    
+    def _reward_dof_acc(self):
+        """【関節加速度制限】"""
+        # 加速度は計算していない場合が多いので、近似的に (vel - last_vel) / dt
+        if hasattr(self, 'last_dof_vel'):
+            acc = (self.dof_vel - self.last_dof_vel) / self.dt
+            return torch.sum(torch.square(acc), dim=1)
+        return 0.0
+    
+    def _reward_torques(self):
+        # トルクの二乗和（省エネ）
+        # これがないと最大出力で張り付きます
+        return torch.sum(torch.square(self.dof_force), dim=1)
