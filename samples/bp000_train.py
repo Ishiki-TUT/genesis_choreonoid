@@ -177,9 +177,9 @@ def get_cfgs():
             "ankle_regularization": -0.001,
             "feet_stride": 0.0, # 1.0
             "hip_pitch_motion": 0.2, # 0.1
-            "feet_alternating_pos": 2.0, # 5.0
+            "feet_alternating_pos": 3.0, # 5.0
             # "feet_pos_symmetry": -1.0,
-            "feet_air_time": 0.05,      # 3.0 足を浮かせることを強く推奨
+            "feet_air_time": 0.002,      # 3.0 足を浮かせることを強く推奨
             "torques": -0.00001,        # 無駄な力みを罰する
         },
     }
