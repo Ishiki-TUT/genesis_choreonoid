@@ -167,7 +167,7 @@ def get_cfgs():
             "lin_vel_z": -2.0,
             "base_height": -10.0, # -50.0
             "action_rate": -0.01,  # -0.005
-            "similar_to_default": -0.1,
+            "similar_to_default": -0.2,
             # "effort": 0.01,
             # "tracking_error": -0.1,
             "episode_len": 0.01, # 0.01
@@ -175,9 +175,9 @@ def get_cfgs():
             # "min_ankle_height": 1.0, #10.0
             "plus_watt": 0.05, # -0.01
             "ankle_regularization": -0.001,
-            "feet_stride": 0.0, # 1.0
-            "hip_pitch_motion": 0.2, # 0.1
-            "feet_alternating_pos": 3.0, # 5.0
+            "feet_stride": 1.0, # 1.0
+            "hip_pitch_motion": 0.1, # 0.1
+            "feet_alternating_pos": 1.0, # 5.0
             # "feet_pos_symmetry": -1.0,
             "feet_air_time": 0.002,      # 3.0 足を浮かせることを強く推奨
             "torques": -0.00001,        # 無駄な力みを罰する
