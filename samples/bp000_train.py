@@ -197,7 +197,7 @@ def get_cfgs():
             "knee_pitch_motion": 0.1, # 0.1
             "feet_alternating_pos": 1.0, # 5.0
             # "feet_pos_symmetry": -1.0,
-            "feet_air_time": 0.002,      # 3.0 足を浮かせることを強く推奨
+            "feet_air_time": 0.008,      # 3.0 足を浮かせることを強く推奨
             "torques": -0.0000001,        # 無駄な力みを罰する
         },
     }
