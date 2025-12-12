@@ -73,7 +73,7 @@ class RLEnvGenesis(RLEnvBase):
         
         base_pos_cpu[:, 0] = box_centers_arr[terrain_indices_cpu, 0]
         base_pos_cpu[:, 1] = box_centers_arr[terrain_indices_cpu, 1]
-        base_pos_cpu[:, 2] = 0.6  
+        base_pos_cpu[:, 2] = original_pos[2] if original_pos.ndim == 1 else original_pos[0, 2] 
         
         base_pos_cpu = base_pos_cpu.astype(np.float32)
         self.base_init_pos = torch.from_numpy(base_pos_cpu).to(self.device)

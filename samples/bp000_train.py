@@ -87,20 +87,35 @@ def get_cfgs():
     env_cfg = {
         "num_actions": 12,
         # joint/link names
+        # "default_joint_angles": {  # [rad]
+        #     "R_HIP_Y": 0.0,
+        #     "R_HIP_R": 0.0,
+        #     "R_HIP_P": -0.8,
+        #     "R_KNEE": 1.6,
+        #     "R_ANKLE_P": -0.8,
+        #     "R_ANKLE_R": 0.0,
+        #     "L_HIP_Y": 0.0,
+        #     "L_HIP_R": 0.0,
+        #     "L_HIP_P": -0.8,
+        #     "L_KNEE": 1.6,
+        #     "L_ANKLE_P": -0.8,
+        #     "L_ANKLE_R": 0.0,
+        # },
         "default_joint_angles": {  # [rad]
             "R_HIP_Y": 0.0,
             "R_HIP_R": 0.0,
-            "R_HIP_P": -0.8,
-            "R_KNEE": 1.6,
-            "R_ANKLE_P": -0.8,
+            "R_HIP_P": -0.4,
+            "R_KNEE": 0.8,
+            "R_ANKLE_P": -0.4,
             "R_ANKLE_R": 0.0,
             "L_HIP_Y": 0.0,
             "L_HIP_R": 0.0,
-            "L_HIP_P": -0.8,
-            "L_KNEE": 1.6,
-            "L_ANKLE_P": -0.8,
+            "L_HIP_P": -0.4,
+            "L_KNEE": 0.8,
+            "L_ANKLE_P": -0.4,
             "L_ANKLE_R": 0.0,
         },
+
         "joint_names": [
             "R_HIP_Y",
             "R_HIP_R",
@@ -124,7 +139,8 @@ def get_cfgs():
         "termination_if_roll_greater_than": 10,  # 10 degree
         "termination_if_pitch_greater_than": 10, # 10 degree
         # base pose
-        "base_init_pos": [0.0, 0.0, 0.64], # [0.0, 0.0, 0.64]
+        # "base_init_pos": [0.0, 0.0, 0.64], # [0.0, 0.0, 0.64]
+        "base_init_pos": [0.0, 0.0, 0.82], # [0.0, 0.0, 0.64]
         "base_init_quat": [1.0, 0.0, 0.0, 0.0],
         "episode_length_s": 20.0,
         "resampling_time_s": 4.0,
@@ -159,7 +175,8 @@ def get_cfgs():
     }
     reward_cfg = {
         "tracking_sigma": 0.25,
-        "base_height_target": 0.64,
+        # "base_height_target": 0.64,
+        "base_height_target": 0.82,
         "feet_height_target": 0.075,
         "reward_scales": {
             "tracking_lin_vel": 8.0, # 2.0
