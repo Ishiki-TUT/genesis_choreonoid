@@ -171,7 +171,7 @@ def get_cfgs():
             # "effort": 0.01,
             # "tracking_error": -0.1,
             "episode_len": 0.01, # 0.01
-            "correct_action": 0.05, # 0.01
+            "correct_action": 0.01, # 0.01
             # "min_ankle_height": 1.0, #10.0
             "plus_watt": 0.05, # -0.01
             "ankle_regularization": -0.001,
@@ -180,7 +180,7 @@ def get_cfgs():
             "feet_alternating_pos": 1.0, # 5.0
             # "feet_pos_symmetry": -1.0,
             "feet_air_time": 0.002,      # 3.0 足を浮かせることを強く推奨
-            "torques": -0.00001,        # 無駄な力みを罰する
+            "torques": -0.0000001,        # 無駄な力みを罰する
         },
     }
 
