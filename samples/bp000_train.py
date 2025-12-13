@@ -165,7 +165,8 @@ def get_cfgs():
         },
     }
     obs_cfg = {
-        "num_obs": 45,  # 3 + 3 + 3 + 12 + 12 + 12
+        # "num_obs": 45,  # 3 + 3 + 3 + 12 + 12 + 12
+        "num_obs": 47,  # ★変更: 45 + 2 (sin, cos) = 47
         "obs_scales": {
             "lin_vel": 2.0,
             "ang_vel": 0.25,
@@ -192,7 +193,7 @@ def get_cfgs():
             # "min_ankle_height": 1.0, #10.0
             "plus_watt": 0.05, # -0.01
             "ankle_regularization": -0.001,
-            "feet_stride": 1.0, # 1.0
+            "feet_stride": 2.0, # 1.0
             "hip_pitch_motion": 0.1, # 0.1
             "knee_pitch_motion": 0.1, # 0.1
             "feet_alternating_pos": 1.0, # 5.0

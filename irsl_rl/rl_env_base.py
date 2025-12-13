@@ -92,6 +92,10 @@ class RLEnvBase:
             device=self.device,
             dtype=torch.float32,
         )
+        # ★追加: 周期信号用の変数を定義
+        self.phase = torch.zeros((self.num_envs,), device=self.device, dtype=torch.float32)
+        self.freq = 1.5  # ★歩行周波数 (Hz) 。1.0~2.0くらいで調整してください
+
         #self.l_ankle_z = torch.zeros((self.num_envs), device=self.device, dtype=torch.float32)
         #self.r_ankle_z = torch.zeros((self.num_envs), device=self.device, dtype=torch.float32)
         #self.min_ankle_height = torch.zeros((self.num_envs), device=self.device, dtype=torch.float32)
@@ -114,6 +118,10 @@ class RLEnvBase:
 
         self.env_step() ## call overrided function
         self.update_buffers() ## call overrided function
+
+        # ★追加: 位相(Phase)の更新
+        # dt * 2pi * freq だけ進める
+        self.phase = (self.phase + self.dt * 2 * torch.pi * self.freq) % (2 * torch.pi)
 
         # resample commands
         envs_idx = (
@@ -143,6 +151,9 @@ class RLEnvBase:
             # print(f"reward {name}: {rew.mean().item():.4f}")
 
         # compute observations
+        # ★ここを変更: 最後に sin(phase), cos(phase) を結合する
+        phase_signal = torch.stack([torch.sin(self.phase), torch.cos(self.phase)], dim=-1) # (num_envs, 2)
+
         self.obs_buf = torch.cat(
             [
                 self.base_ang_vel * self.obs_scales["ang_vel"],  # 3
@@ -151,6 +162,7 @@ class RLEnvBase:
                 (self.dof_pos - self.default_dof_pos) * self.obs_scales["dof_pos"],  # 12
                 self.dof_vel * self.obs_scales["dof_vel"],  # 12
                 self.actions,  # 12
+                # phase_signal,  # 2
             ],
             axis=-1,
         )
@@ -198,6 +210,8 @@ class RLEnvBase:
         self.last_dof_vel[envs_idx] = 0.0
         self.episode_length_buf[envs_idx] = 0
         self.reset_buf[envs_idx] = True
+        # ★追加: 位相をランダムに初期化 (0 ~ 2pi)
+        self.phase[envs_idx] = rand_float(0, 2 * torch.pi, (len(envs_idx),), self.device)
 
         # fill extras
         self.extras["episode"] = {}
