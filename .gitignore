@@ -1,2 +1,14 @@
 userdir/*
 !userdir/.gitkeep
+__pycache__/
+*.pyc
+*.pt
+*.pkl
+*.csv
+samples/logs/
+samples/auto_train_logs/
+samples/obs_data/
+samples/obs_data_paper/
+.virtual_documents/
+.vscode/
+.claude/

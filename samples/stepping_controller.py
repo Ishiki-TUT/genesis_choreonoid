@@ -29,9 +29,9 @@ class Centroid:
     
     def __post_init__(self):
         if self.dcm_ref is None:
-            self.dcm_ref = np.array([0.0, 0.0, 0.8])
+            self.dcm_ref = np.array([0.0, 0.0, 0.71])  # ← 0.8 から 0.71 に変更（実際の CoM 高さ）
         if self.dcm_target is None:
-            self.dcm_target = np.array([0.0, 0.0, 0.8])
+            self.dcm_target = np.array([0.0, 0.0, 0.71])  # ← 0.8 から 0.71 に変更
         if self.zmp_ref is None:
             self.zmp_ref = np.array([0.0, 0.0, 0.0])
         if self.zmp_target is None:
@@ -94,7 +94,7 @@ class SteppingController:
         
         # 最初にステップ数の確認と、正しい参照（st0, st1, stb0, stb1）の固定
         if len(footstep.steps) < 2 or len(footstep_buffer.steps) < 2:
-            return
+            return False
             
         st0 = footstep.steps[0]
         st1 = footstep.steps[1]
@@ -122,7 +122,7 @@ class SteppingController:
                     footstep.steps.pop(0)
                     if len(footstep.steps) == 1:
                         print("end of footstep reached")
-                        return
+                        return False
                 
                 footstep_buffer.steps[1].dcm = footstep_buffer.steps[0].dcm.copy()
                 footstep_buffer.steps.pop(0)
@@ -240,3 +240,5 @@ class SteppingController:
             foot[swg].pos_ref = qrel.apply(foot[swg].pos_ref - pivot) + pivot
             foot[swg].ori_ref = qrel * foot[swg].ori_ref
             foot[swg].angle_ref = foot[swg].ori_ref.as_euler('xyz')
+
+        return True

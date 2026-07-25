@@ -245,3 +245,97 @@ class FootstepPlanner:
                 st0.stepping = True
             
             i -= 1
+    
+    def generate_5step_walking_plan(stride=0.05, sway=0.0, turn=0.0, 
+                                     spacing=0.2, com_height=0.65, T=1.0, 
+                                     duration_per_step=0.8):
+        """
+        5ステップの歩行計画を生成
+        
+        Args:
+            stride: 前進距離 [m]
+            sway: 左右のスウェイ幅 [m]
+            turn: 旋回角度 [rad]
+            spacing: 足間隔 [m]
+            com_height: CoM高さ [m]
+            T: 時間定数 [s]
+            duration_per_step: 1ステップの時間 [s]
+        
+        Returns:
+            footstep: Footstepオブジェクト（複数のStepを含む）
+            param: Paramオブジェクト
+        """
+        
+        param = Param(com_height=com_height, T=T)
+        steps = []
+        
+        # 初期位置
+        current_x = 0.0
+        current_y = 0.0
+        current_time = 0.0
+        
+        print("\n" + "="*70)
+        print("Debug: Generating 5-step walking plan")
+        print(f"  stride={stride}, spacing={spacing}, duration_per_step={duration_per_step}")
+        print("="*70)
+        
+        # ★重要: ステップを逐次的に生成（5ステップ）
+        for step_idx in range(5):
+            step = Step()
+            
+            # 【重要】各ステップの位置を計算
+            if step_idx == 0:
+                # ステップ0（初期左足）
+                current_x = 0.0
+                current_y = spacing / 2  # 左足は+Y
+                step.stepping = False
+                
+            elif step_idx == 1:
+                # ステップ1（右足）- 前進
+                current_x += stride
+                current_y = -spacing / 2  # 右足は-Y
+                step.stepping = True
+                
+            elif step_idx == 2:
+                # ステップ2（左足）- 前進
+                current_x += stride
+                current_y = spacing / 2  # 左足は+Y
+                step.stepping = True
+                
+            elif step_idx == 3:
+                # ステップ3（右足）- 前進
+                current_x += stride
+                current_y = -spacing / 2  # 右足は-Y
+                step.stepping = True
+                
+            elif step_idx == 4:
+                # ステップ4（左足）- 前進
+                current_x += stride
+                current_y = spacing / 2  # 左足は+Y
+                step.stepping = True
+            
+            # ZMP位置を設定
+            step.zmp = np.array([current_x, current_y, 0.0], dtype=np.float32)
+            
+            # DCM位置を初期値として設定
+            step.dcm = step.zmp.copy()
+            
+            # 時間を設定
+            step.time = current_time
+            current_time += duration_per_step
+            
+            steps.append(step)
+            
+            # デバッグ出力
+            foot_name = "LEFT" if step_idx % 2 == 0 else "RIGHT"
+            print(f"Step {step_idx} ({foot_name}): ZMP=[{step.zmp[0]:.4f}, {step.zmp[1]:.4f}], time={step.time:.2f}s, stepping={step.stepping}")
+        
+        print(f"Total steps generated: {len(steps)}")
+        print("="*70 + "\n")
+        
+        footstep = Footstep(steps=steps)
+        
+        return footstep, param
+
+
+# ★重要: クラス定義の外側に配置（クラスの __init__ や __post_init__ ではなく）

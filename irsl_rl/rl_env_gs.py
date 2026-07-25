@@ -95,12 +95,12 @@ class RLEnvGenesis(RLEnvBase):
         rest = float(torch.rand(1, device=self.device) * (res_high - res_low) + res_low)
 
         # --- 地面（plane）の geom に設定 ---
-        try:
-            self.plane.set_friction(fric)
-            print(" [DomainRand] Set ground friction to:", fric)
-            # self.plane.set_restitution(rest)
-        except Exception as e:
-            print(f"[DomainRand] Warning: ground friction/restitution not set: {e}")
+        # try:
+        #     self.plane.set_friction(fric)
+        #     print(" [DomainRand] Set ground friction to:", fric)
+        #     # self.plane.set_restitution(rest)
+        # except Exception as e:
+        #     print(f"[DomainRand] Warning: ground friction/restitution not set: {e}")
 
         # --- PDゲイン ---
         dr = self.env_cfg["domain_rand"]

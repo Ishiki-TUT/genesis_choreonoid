@@ -13,7 +13,9 @@ _UBUNTU_VER=22.04
 _ROS_DISTRO=one
 REPO=repo.irsl.eiiris.tut.ac.jp/
 IRSL_SYSTEM_IMAGE_NAME=${REPO}irsl_system:22.04_one
+# IRSL_SYSTEM_IMAGE_NAME=${REPO}irsl_system:24.04_one
 OUTPUT_IMAGE_NAME=${REPO}genesis_with_irsl${IRSL_TAG}:22.04_one
+# OUTPUT_IMAGE_NAME=${REPO}genesis_with_irsl${IRSL_TAG}:24.04_one
 
 DOCKER_OPT='--progress plain'
 
